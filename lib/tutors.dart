@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mindmate/components.dart';
-import 'package:mindmate/home.dart';
+import 'package:mindmate/top_bar.dart';
 
 class TutorsWidget extends StatefulWidget {
   const TutorsWidget({super.key});
@@ -15,6 +15,12 @@ class _TutorsWidgetState extends State<TutorsWidget> {
     return Scaffold(
       appBar: TopBar(title: 'Tutors'),
       drawer: DrawerWidget(),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [Text('This is Tutors page')],
+        ),
+      ),
     );
   }
 }

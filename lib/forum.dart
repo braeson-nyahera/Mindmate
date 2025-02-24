@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mindmate/components.dart';
-import 'package:mindmate/home.dart';
+import 'package:mindmate/top_bar.dart';
 
 class ForumsWidget extends StatefulWidget {
   const ForumsWidget({super.key});
@@ -15,6 +15,12 @@ class _ForumsWidgetState extends State<ForumsWidget> {
     return Scaffold(
       appBar: TopBar(title: 'Discussion Forum'),
       drawer: DrawerWidget(),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [Text('This is a forum page')],
+        ),
+      ),
     );
   }
 }
