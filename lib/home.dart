@@ -19,8 +19,43 @@ class _MyHomePageState extends State<MyHomePage> {
       drawer: DrawerWidget(),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [Text('This is home')],
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                    height: 100,
+                    width: double.infinity,
+                    color: Colors.amber,
+                    child: SizedBox(
+                      child: Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Icon(size: 64, Icons.person),
+                          ),
+                          Center(
+                            child: SizedBox(
+                              width: 300,
+                              child: Column(children: [
+                                Text(
+                                  'This is home',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text('Email is here')
+                              ]),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+              ),
+            )
+          ],
         ),
       ),
     );
