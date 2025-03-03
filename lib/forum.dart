@@ -1,9 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mindmate/components.dart';
 import 'package:mindmate/top_bar.dart';
 
 class ForumsWidget extends StatefulWidget {
-  const ForumsWidget({super.key});
+  ForumsWidget({super.key});
+
+  final CollectionReference discussions =
+      FirebaseFirestore.instance.collection('discussions');
 
   @override
   State<ForumsWidget> createState() => _ForumsWidgetState();
