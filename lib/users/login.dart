@@ -29,6 +29,16 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void handleGoogleSignIn(BuildContext context) async {
+    User? user = await authService.signInWithGoogle();
+    if (user != null) {
+      print("Google Sign-In Successful: ${user.email}");
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      print("Google Sign-In Failed");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,6 +60,10 @@ class _LoginScreenState extends State<LoginScreen> {
             ElevatedButton(
               onPressed: signIn,
               child: Text("Login"),
+            ),
+            ElevatedButton(
+              onPressed: () => handleGoogleSignIn(context),
+              child: Text("Sign in with Google"),
             ),
             TextButton(
               onPressed: () {
