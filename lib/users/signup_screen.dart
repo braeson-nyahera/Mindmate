@@ -18,6 +18,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final AuthService authService = AuthService();
   final CollectionReference users =
       FirebaseFirestore.instance.collection('users');
+  bool _isLoading = false;
 
   void signUp() async {
     String email = emailController.text.trim();
@@ -36,12 +37,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'user_id': user.uid,
           'name': name,
           'email': email,
+          "photoURL": user.photoURL ?? "",
+          "createdAt": FieldValue.serverTimestamp(),
         });
         print("User Signed Up: ${user.email}");
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         print("Sign Up Failed");
       }
+    }
+  }
+
+  void handleGoogleSignUp() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    User? user = await authService.signInWithGoogle();
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (user != null) {
+      print("Google Sign-Up Successful: ${user.email}");
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      print("Google Sign-Up Failed");
     }
   }
 
@@ -75,6 +97,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ElevatedButton(
               onPressed: signUp,
               child: Text("Sign Up"),
+            ),
+            Center(
+              child: _isLoading
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: handleGoogleSignUp,
+                      child: Text("Sign Up with Google"),
+                    ),
             ),
             TextButton(
               onPressed: () {

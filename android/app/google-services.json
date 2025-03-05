@@ -12,7 +12,12 @@
           "package_name": "com.example.mindmate"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "816258150287-4s5bcmu3timfvm2mbcas7kke36ojj7d9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCzqlxNATy-lnspp7lRmsPlkK_RATfKtbs"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "816258150287-4s5bcmu3timfvm2mbcas7kke36ojj7d9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "816258150287-d476cgp33eu57iia7v41u08ccm3fb0ko.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mindmate"
+              }
+            }
+          ]
         }
       }
     }
