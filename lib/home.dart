@@ -61,49 +61,89 @@ class _MyHomePageState extends State<MyHomePage> {
               ? Center(child: Text("No user data found"))
               : Padding(
                   padding: const EdgeInsets.all(12.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                        height: 100,
-                        width: double.infinity,
-                        color: Colors.amber,
-                        child: SizedBox(
-                          child: Row(
-                            children: [
-                              Padding(
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                            height: 100,
+                            width: double.infinity,
+                            color: const Color.fromARGB(255, 231, 195, 97),
+                            child: SizedBox(
+                              child: Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: CircleAvatar(
-                                  radius: 40,
-                                  backgroundImage:
-                                      _userData!["photoURL"] != null &&
-                                              _userData!["photoURL"].isNotEmpty
-                                          ? NetworkImage(_userData!["photoURL"])
-                                          : null,
-                                  child: _userData!["photoURL"] == null ||
-                                          _userData!["photoURL"].isEmpty
-                                      ? Icon(Icons.person,
-                                          size: 40) // Show an icon instead
-                                      : null,
-                                ),
-                              ),
-                              Center(
-                                child: SizedBox(
-                                  width: 300,
-                                  child: Column(children: [
-                                    Text(
-                                      "${_userData!['name']}",
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
+                                child: Row(
+                                  spacing: 10,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: CircleAvatar(
+                                        radius: 40,
+                                        backgroundImage:
+                                            _userData!["photoURL"] != null &&
+                                                    _userData!["photoURL"]
+                                                        .isNotEmpty
+                                                ? NetworkImage(
+                                                    _userData!["photoURL"])
+                                                : null,
+                                        child: _userData!["photoURL"] == null ||
+                                                _userData!["photoURL"].isEmpty
+                                            ? Icon(Icons.person,
+                                                size:
+                                                    40) // Show an icon instead
+                                            : null,
                                       ),
                                     ),
-                                    Text("${_userData!['email']}")
-                                  ]),
+                                    Center(
+                                      child: SizedBox(
+                                        width: 200,
+                                        child: Column(children: [
+                                          Text(
+                                            "${_userData!['name']}",
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            "${_userData!['email']}",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color.fromARGB(
+                                                  255, 64, 127, 222),
+                                            ),
+                                          ),
+                                        ]),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                        )),
+                            )),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          height: 250,
+                          width: double.infinity,
+                          color: const Color.fromARGB(255, 184, 199, 226),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          height: 250,
+                          width: double.infinity,
+                          color: const Color.fromARGB(255, 184, 199, 226),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
     );
