@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mindmate/components.dart';
+import 'package:mindmate/course_detail.dart';
 import 'package:mindmate/top_bar.dart';
 
 class CoursesList extends StatefulWidget {
@@ -35,6 +37,8 @@ class _CoursesListState extends State<CoursesList> {
             itemCount: courseLists.length,
             itemBuilder: (context, index) {
               var data = courseLists[index].data() as Map<String, dynamic>;
+              var courseDoc = courseLists[index];
+              var courseId = courseDoc.id;
 
               return Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -45,6 +49,16 @@ class _CoursesListState extends State<CoursesList> {
                     height: 60,
                     color: const Color.fromARGB(255, 110, 185, 223),
                     child: ListTile(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CourseDetail(
+                                courseId: courseId,
+                                userId: FirebaseAuth.instance.currentUser!.uid),
+                          ),
+                        );
+                      },
                       minTileHeight: 25,
                       hoverColor: const Color.fromARGB(255, 92, 198, 227),
                       title: Text(data['title'] ?? 'No message'),
