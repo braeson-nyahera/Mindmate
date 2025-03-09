@@ -19,6 +19,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final CollectionReference users =
       FirebaseFirestore.instance.collection('users');
   bool _isLoading = false;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   void signUp() async {
     String email = emailController.text.trim();
@@ -27,24 +28,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String password2 = password2Controller.text.trim();
 
     if (email.isNotEmpty &&
+        name.isNotEmpty &&
         password1.isNotEmpty &&
         password2.isNotEmpty &&
         password1 == password2) {
       User? user = await authService.signUp(email, password1);
 
       if (user != null) {
-        await users.add({
-          'user_id': user.uid,
-          'name': name,
-          'email': email,
-          "photoURL": user.photoURL ?? "",
-          "createdAt": FieldValue.serverTimestamp(),
-        });
+        await _saveUserToFirestore(user);
         print("User Signed Up: ${user.email}");
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         print("Sign Up Failed");
       }
+    }
+  }
+
+  Future<void> _saveUserToFirestore(User user) async {
+    final userDoc = _firestore.collection("users").doc(user.uid);
+
+    final userData = {
+      "uid": user.uid,
+      "name": user.displayName ?? "No Name",
+      "email": user.email ?? "No Email",
+      "photoURL": user.photoURL ?? "",
+      "createdAt": FieldValue.serverTimestamp(),
+    };
+
+    final docSnapshot = await userDoc.get();
+    if (!docSnapshot.exists) {
+      await userDoc.set(userData);
+      print("User saved to Firestore");
+    } else {
+      print("User already exists in Firestore");
     }
   }
 

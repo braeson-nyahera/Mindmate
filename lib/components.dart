@@ -3,6 +3,7 @@ import 'package:mindmate/courses.dart';
 import 'package:mindmate/firebase_test.dart';
 import 'package:mindmate/forum.dart';
 import 'package:mindmate/home.dart';
+import 'package:mindmate/message_list.dart';
 import 'package:mindmate/notes.dart';
 import 'package:mindmate/tutors.dart';
 
@@ -89,12 +90,11 @@ class DrawerWidget extends StatelessWidget {
             ListTile(
               contentPadding: EdgeInsets.fromLTRB(2, 0, 2, 0),
               leading: Icon(Icons.group_rounded),
-              title: const Text('Firebase_Test'),
+              title: const Text('Messages'),
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => FirestoreListScreen()),
+                  MaterialPageRoute(builder: (context) => MessageListScreen()),
                 );
               },
             ),
