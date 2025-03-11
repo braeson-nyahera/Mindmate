@@ -5,6 +5,8 @@ import 'package:mindmate/users/authservice.dart';
 class SignInScreen extends StatelessWidget {
   final AuthService authService = AuthService();
 
+  SignInScreen({super.key});
+
   void handleGoogleSignIn(BuildContext context) async {
     User? user = await authService.signInWithGoogle();
     if (user != null) {

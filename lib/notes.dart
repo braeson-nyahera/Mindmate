@@ -1,9 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'package:mindmate/top_bar.dart';
 
 class NotesWidget extends StatefulWidget {
-  const NotesWidget({super.key});
+  NotesWidget({super.key});
+
+  final CollectionReference notes =
+      FirebaseFirestore.instance.collection('notes');
 
   @override
   State<NotesWidget> createState() => _NotesWidgetState();

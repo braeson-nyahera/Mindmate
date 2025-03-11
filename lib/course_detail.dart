@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mindmate/module_detail.dart';
 import 'package:mindmate/bottom_bar.dart';
 
 class CourseDetail extends StatefulWidget {
@@ -15,6 +17,8 @@ class _CourseDetailState extends State<CourseDetail> {
   Map<String, dynamic>? courseData;
   List<Map<String, dynamic>> modules = [];
   bool isLoading = true;
+  bool hasError = false;
+  String errorMessage = "";
 
   @override
   void initState() {
@@ -33,9 +37,18 @@ class _CourseDetailState extends State<CourseDetail> {
         setState(() {
           courseData = courseSnapshot.data();
         });
+      } else {
+        setState(() {
+          hasError = true;
+          errorMessage = "Course not found";
+        });
       }
     } catch (e) {
       print("Error fetching course: $e");
+      setState(() {
+        hasError = true;
+        errorMessage = "Failed to load course details";
+      });
     }
   }
 
@@ -47,7 +60,13 @@ class _CourseDetailState extends State<CourseDetail> {
               .collection('modules')
               .where('course_id', isEqualTo: courseId)
               .get();
-      return querySnapshot.docs.map((doc) => doc.data()).toList();
+
+      // Add document ID to each module data
+      return querySnapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data();
+        data['id'] = doc.id; // Add the document ID to the data
+        return data;
+      }).toList();
     } catch (e) {
       print("Error fetching modules: $e");
       return [];
@@ -55,11 +74,21 @@ class _CourseDetailState extends State<CourseDetail> {
   }
 
   Future<void> fetchModules() async {
-    List<Map<String, dynamic>> fetchedModules = await getModulesByCourse(widget.courseId);
-    setState(() {
-      modules = fetchedModules;
-      isLoading = false;
-    });
+    try {
+      List<Map<String, dynamic>> fetchedModules =
+          await getModulesByCourse(widget.courseId);
+      setState(() {
+        modules = fetchedModules;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("Error in fetchModules: $e");
+      setState(() {
+        isLoading = false;
+        hasError = true;
+        errorMessage = "Failed to load modules";
+      });
+    }
   }
 
   @override
@@ -88,93 +117,150 @@ class _CourseDetailState extends State<CourseDetail> {
       bottomNavigationBar: Bottombar(currentIndex: 5),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : modules.isEmpty
-              ? const Center(child: Text("No modules found"))
-              : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          : hasError
+              ? Center(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      /// Course Title Section
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Text(
-                          courseData?['title'] ?? 'No title',
-                          style: const TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
+                      const Icon(Icons.error_outline,
+                          color: Colors.red, size: 48),
+                      const SizedBox(height: 16),
+                      Text(
+                        errorMessage,
+                        style: const TextStyle(fontSize: 18),
                       ),
-                      const SizedBox(height: 10),
-
-                      /// Modules List
-                      Expanded(
-                        child: ListView.builder(
-                          
-                          itemCount: modules.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                            
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: DecoratedBox(
-                                decoration :BoxDecoration(
-                                boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 5,
-                                        spreadRadius: 2,
-                                        offset: const Offset(3, 3),
-                                      ),
-                                    ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    
-                                  ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.all(16),
-                                    title: Text(
-                                      modules[index]['title'],
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      modules[index]['description'] ?? 'No description',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.black54,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    trailing: const Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 18,
-                                      color: Colors.black54,
-                                    ),
-                                    onTap: () {
-                                      
-
-                                    },
-                                  ),
-                                ),
-                              ),
-                            )
-                            );
-                          },
-                        ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            isLoading = true;
+                            hasError = false;
+                          });
+                          fetchCourseDetails();
+                          fetchModules();
+                        },
+                        child: const Text('Retry'),
                       ),
                     ],
                   ),
+                )
+              : Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            courseData?['title'] ?? 'No title',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 32,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Course Author: ${courseData?['Author'] ?? 'Unknown'}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            courseData?['description'] ?? 'No description',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          textAlign: TextAlign.start,
+                          'Modules',
+                          style: TextStyle(
+                            color: const Color.fromARGB(255, 7, 131, 255),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    modules.isEmpty
+                        ? const Expanded(
+                            child: Center(
+                              child: Text(
+                                "No modules found for this course",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          )
+                        : Expanded(
+                            child: ListView.builder(
+                              itemCount: modules.length,
+                              itemBuilder: (context, index) {
+                                final module = modules[index];
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                    vertical: 8.0,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Container(
+                                      width: double.infinity,
+                                      height: 60,
+                                      color: const Color.fromARGB(
+                                          255, 110, 185, 223),
+                                      child: ListTile(
+                                        onTap: () {
+                                          final user =
+                                              FirebaseAuth.instance.currentUser;
+                                          if (user != null &&
+                                              module['id'] != null) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ModuleDetail(
+                                                  moduleId: module['id'],
+                                                  userId: user.uid,
+                                                ),
+                                              ),
+                                            );
+                                          } else {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'Unable to open module. Please try again.'),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        title: Text(module['title'] ??
+                                            'Untitled Module'),
+                                        subtitle: Text(
+                                          module['description'] ??
+                                              'No description',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                  ],
                 ),
     );
   }
