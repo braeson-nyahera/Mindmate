@@ -27,9 +27,11 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+
 dependencies:
   flutter:
     sdk: flutter
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -39,6 +41,7 @@ dependencies:
   firebase_auth: ^5.5.1
   firebase_messaging: ^15.2.4
   google_sign_in: ^6.2.2
+  google_fonts: ^6.1.0
   intl: ^0.20.2
   rxdart: ^0.28.0
 
@@ -63,6 +66,14 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/images/MindMate_logo.png
+    - assets/images/backgroundClear.png
+    - assets/images/mmBareLogo.png
+    - assets/images/perfectlogo.png
+    - assets/images/googleIcon.png
+    - assets/images/name.png
+    - assets/images/holder.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

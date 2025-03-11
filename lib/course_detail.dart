@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mindmate/module_detail.dart';
-import 'package:mindmate/top_bar.dart';
+import 'package:mindmate/bottom_bar.dart';
 
 class CourseDetail extends StatefulWidget {
   const CourseDetail({super.key, required this.courseId, required this.userId});
@@ -31,10 +31,7 @@ class _CourseDetailState extends State<CourseDetail> {
   Future<void> fetchCourseDetails() async {
     try {
       DocumentSnapshot<Map<String, dynamic>> courseSnapshot =
-          await FirebaseFirestore.instance
-              .collection('courses')
-              .doc(widget.courseId)
-              .get();
+          await FirebaseFirestore.instance.collection('courses').doc(widget.courseId).get();
 
       if (courseSnapshot.exists) {
         setState(() {
@@ -97,7 +94,27 @@ class _CourseDetailState extends State<CourseDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: TopBar(title: courseData?['title'] ?? 'Course Page'),
+      appBar: AppBar(
+        toolbarHeight: 80,
+        centerTitle: true,
+        title: Text(
+          courseData?['title'] ?? 'Course',
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        backgroundColor: Colors.white,
+        elevation: 2,
+      ),
+      bottomNavigationBar: Bottombar(currentIndex: 5),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : hasError

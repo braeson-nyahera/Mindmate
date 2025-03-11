@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:mindmate/components.dart';
 import 'package:mindmate/discussion_detail.dart';
 import 'package:mindmate/top_bar.dart';
+import 'package:mindmate/bottom_bar.dart';
 
 class ForumsWidget extends StatefulWidget {
   ForumsWidget({super.key});

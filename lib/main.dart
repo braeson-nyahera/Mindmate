@@ -1,7 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:mindmate/chats.dart';
+import 'package:mindmate/courses.dart';
 import 'package:mindmate/firebase_options.dart';
+import 'package:mindmate/forum.dart';
+import 'package:mindmate/landing_page.dart';
+import 'package:mindmate/notifications.dart';
+import 'package:mindmate/profile.dart';
+import 'package:mindmate/tutors.dart';
 import 'package:mindmate/users/login.dart';
 import 'package:mindmate/users/signup_screen.dart';
 import 'home.dart';
@@ -34,12 +41,20 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: MyHomePage(title: 'MindMate'),
-      initialRoute: '/login',
+     initialRoute: '/landing_page',
+    
       routes: {
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignUpScreen(),
         '/home': (context) => MyHomePage(title: 'Mindmate'),
-      },
+        '/courses': (context) => CoursesList(),
+        '/forum': (context) => ForumsWidget(),
+        '/tutors': (context) => TutorsWidget(),
+        '/profile': (context) => ProfileWidget(),
+        '/notifications': (context) => NotificationsWidget(),
+        '/landing_page': (context) => LandingWidget(),
+        '/chats': (context) => ChatsWidget(),
+        },
     );
   }
 }
