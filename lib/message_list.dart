@@ -13,8 +13,8 @@ class MessageListScreen extends StatefulWidget {
   State<MessageListScreen> createState() => _MessageListScreenState();
 }
 
-class MessageStream {
-  static Stream<List<QueryDocumentSnapshot>> getMessages(String userId) {
+class ConversationStream {
+  static Stream<List<Map<String, dynamic>>> getConversations(String userId) {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
     Stream<QuerySnapshot> senderStream = firestore
@@ -33,19 +33,52 @@ class MessageStream {
       senderStream,
       authorStream,
       (QuerySnapshot senderSnapshot, QuerySnapshot authorSnapshot) {
-        // Merge results and sort by 'CreatedAt'
-        List<QueryDocumentSnapshot> mergedDocs = [
+        // Merge results
+        List<QueryDocumentSnapshot> allMessages = [
           ...senderSnapshot.docs,
           ...authorSnapshot.docs,
         ];
 
-        mergedDocs.sort((a, b) {
+        // Create a map to store the most recent message for each conversation
+        Map<String, Map<String, dynamic>> conversations = {};
+
+        for (var doc in allMessages) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          String authorId = data['Author_Id'] ?? '';
+          String receiverId = data['Receiver_Id'] ?? '';
+
+          // Determine the other user in the conversation
+          String otherUserId = (authorId == userId) ? receiverId : authorId;
+
+          // Create a conversation key that uniquely identifies this conversation
+          // regardless of who is sender or receiver
+          String conversationKey = [userId, otherUserId].toSet().join('_');
+
+          // If this conversation doesn't exist in our map yet, or if this message
+          // is more recent than the one we have, update it
+          if (!conversations.containsKey(conversationKey) ||
+              (data['CreatedAt'] as Timestamp).compareTo(
+                      conversations[conversationKey]!['CreatedAt']
+                          as Timestamp) >
+                  0) {
+            // Add the otherUserId to the data map for easy reference
+            data['otherUserId'] = otherUserId;
+            data['documentId'] = doc.id;
+
+            conversations[conversationKey] = data;
+          }
+        }
+
+        // Convert map to list and sort by creation time
+        List<Map<String, dynamic>> conversationList =
+            conversations.values.toList();
+        conversationList.sort((a, b) {
           Timestamp aTime = a['CreatedAt'] ?? Timestamp(0, 0);
           Timestamp bTime = b['CreatedAt'] ?? Timestamp(0, 0);
           return bTime.compareTo(aTime);
         });
 
-        return mergedDocs;
+        return conversationList;
       },
     );
   }
@@ -104,36 +137,41 @@ class _MessageListScreenState extends State<MessageListScreen> {
     }
   }
 
+  // Format timestamp to a readable date and time
+  String _formatTimestamp(Timestamp? timestamp) {
+    if (timestamp == null) return "Unknown time";
+
+    DateTime dateTime = timestamp.toDate();
+    DateTime now = DateTime.now();
+
+    // If it's today, just show the time
+    if (dateTime.year == now.year &&
+        dateTime.month == now.month &&
+        dateTime.day == now.day) {
+      return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+    }
+
+    // If it's yesterday, show "Yesterday"
+    DateTime yesterday = now.subtract(const Duration(days: 1));
+    if (dateTime.year == yesterday.year &&
+        dateTime.month == yesterday.month &&
+        dateTime.day == yesterday.day) {
+      return "Yesterday";
+    }
+
+    // Otherwise show the date
+    return "${dateTime.day}/${dateTime.month}/${dateTime.year}";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: TopBar(title: 'Messages'),
+      appBar: TopBar(title: 'Conversations'),
       drawer: DrawerWidget(),
       body: Column(children: [
-        // Discussion question card
-        // Padding(
-        //   padding: const EdgeInsets.all(16.0),
-        //   child: Card(
-        //     elevation: 4,
-        //     child: Padding(
-        //       padding: const EdgeInsets.all(16.0),
-        //       child: Column(
-        //         crossAxisAlignment: CrossAxisAlignment.start,
-        //         children: [
-        //           const Text(
-        //             'Messages',
-        //             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        //           ),
-        //         ],
-        //       ),
-        //     ),
-        //   ),
-        // ),
-
-        // Comments section
         Expanded(
-          child: StreamBuilder<List<QueryDocumentSnapshot>>(
-            stream: MessageStream.getMessages(user),
+          child: StreamBuilder<List<Map<String, dynamic>>>(
+            stream: ConversationStream.getConversations(user),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -141,30 +179,26 @@ class _MessageListScreenState extends State<MessageListScreen> {
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return const Center(
-                  child: Text("No messages found"),
+                  child: Text("No conversations found"),
                 );
               }
 
-              var messages = snapshot.data!;
+              var conversations = snapshot.data!;
 
               return ListView.builder(
-                itemCount: messages.length,
+                itemCount: conversations.length,
                 itemBuilder: (context, index) {
-                  var data = messages[index].data() as Map<String, dynamic>;
+                  var data = conversations[index];
 
-                  // Determine if the current user is author or receiver
+                  // Get the ID of the other user in the conversation
+                  String otherUserId = data['otherUserId'];
+
+                  // Determine if the current user is author or receiver of the latest message
                   bool isAuthor = user == data['Author_Id'];
 
-                  // Get ID of the other user to fetch their name
-                  String otherUserId = isAuthor
-                      ? data['Receiver_Id'] ?? "Unknown"
-                      : data['Author_Id'] ?? "Unknown";
-
-                  String createdAt =
-                      (data['CreatedAt'] as Timestamp?)?.toDate().toString() ??
-                          "Unknown time";
-
                   String messageContent = data['message'] ?? "No content";
+                  Timestamp createdAt = data['CreatedAt'] ?? Timestamp(0, 0);
+                  String formattedTime = _formatTimestamp(createdAt);
 
                   return FutureBuilder<DocumentSnapshot>(
                     future: _getUserDetails(otherUserId),
@@ -186,22 +220,19 @@ class _MessageListScreenState extends State<MessageListScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => MessageDetail(
-                                    authorId: data['Author_Id'],
-                                    receiverId: data['Receiver_Id']),
+                                    authorId: isAuthor ? user : otherUserId,
+                                    receiverId: isAuthor ? otherUserId : user),
                               ),
                             );
                           },
                           leading: CircleAvatar(
-                            backgroundColor:
-                                isAuthor ? Colors.blue[100] : Colors.green[100],
+                            backgroundColor: Colors.blue[100],
                             child: Text(
                               userName.isNotEmpty
                                   ? userName[0].toUpperCase()
                                   : '?',
                               style: TextStyle(
-                                color: isAuthor
-                                    ? Colors.blue[800]
-                                    : Colors.green[800],
+                                color: Colors.blue[800],
                               ),
                             ),
                           ),
@@ -211,30 +242,38 @@ class _MessageListScreenState extends State<MessageListScreen> {
                                 child: Text(
                                   userName,
                                   overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                               Text(
-                                isAuthor ? 'Sent' : 'Received',
-                                style: TextStyle(
+                                formattedTime,
+                                style: const TextStyle(
                                   fontSize: 12,
-                                  color: isAuthor ? Colors.blue : Colors.green,
+                                  color: Colors.grey,
                                 ),
                               ),
                             ],
                           ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          subtitle: Row(
                             children: [
-                              Text(messageContent),
-                              SizedBox(height: 4),
-                              Text(
-                                createdAt,
-                                style:
-                                    TextStyle(fontSize: 10, color: Colors.grey),
+                              // Show a send/receive icon
+                              isAuthor
+                                  ? const Icon(Icons.arrow_outward,
+                                      size: 14, color: Colors.blue)
+                                  : const Icon(Icons.arrow_downward,
+                                      size: 14, color: Colors.green),
+                              const SizedBox(width: 4),
+                              // Show message preview
+                              Expanded(
+                                child: Text(
+                                  messageContent,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
                               ),
                             ],
                           ),
-                          isThreeLine: true,
                         ),
                       );
                     },
