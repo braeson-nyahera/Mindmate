@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
  Widget build(BuildContext context) {
   return Scaffold(
-    appBar: AppBar(title: const Text("Login")),
+    
     body: Container(
       width: double.infinity,
       height: double.infinity,
@@ -160,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Image.asset('assets/images/googleIcon.png', height: 24), // Google logo
                     const SizedBox(width: 10),
                     const Text(
-                      "Sign in with Google",
+                      "Continue with Google",
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -173,11 +173,29 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () {
                 Navigator.pushReplacementNamed(context, '/signup');
               },
-              child: const Text(
-                
-                "Don't have an account? Sign Up",
-                style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
-              ),
+              child: Text.rich(
+                  TextSpan(
+                    text: "Don't have an account? ", // Normal text
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Color.fromARGB(255, 0, 0, 0),
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "Sign Up", // Styled text
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold, // Different weight
+                          fontStyle: FontStyle.italic, // Optional italic
+                          fontFamily: 'CustomFont', // Change font if needed
+                          color: Color(0xFF2D5DA1), // Optional different color
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
             ),
           ],
         ),

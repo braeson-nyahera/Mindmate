@@ -59,20 +59,24 @@ class _ModuleDetailState extends State<ModuleDetail> {
               ? const Center(child: Text('No content in module'))
               : Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: ListView(
                     children: [
-                      Text(
-                        moduleData?['title'] ?? 'No title',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        moduleData?['content'] ?? 'No content',
-                        style: const TextStyle(fontSize: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            moduleData?['title'] ?? 'No title',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            moduleData?['content'] ?? 'No content',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ],
                       ),
                     ],
                   ),

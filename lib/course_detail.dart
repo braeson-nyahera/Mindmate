@@ -179,16 +179,16 @@ class _CourseDetailState extends State<CourseDetail> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.only(left: 20),
                       child: SizedBox(
                         width: double.infinity,
                         child: Text(
                           textAlign: TextAlign.start,
                           'Modules',
                           style: TextStyle(
-                            color: const Color.fromARGB(255, 7, 131, 255),
+                            color: const Color(0xFF2D5DA1),
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontSize: 26,
                           ),
                         ),
                       ),
@@ -212,13 +212,23 @@ class _CourseDetailState extends State<CourseDetail> {
                                     horizontal: 16.0,
                                     vertical: 8.0,
                                   ),
+                                  child:DecoratedBox(decoration: BoxDecoration(
+                                    boxShadow: [
+                                      BoxShadow(
+                                         color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 5,
+                                        spreadRadius: 2,
+                                        offset: const Offset(2, 2),
+                                 
+                                      )
+                                    ]
+                                  ),
                                   child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(8),
                                     child: Container(
                                       width: double.infinity,
-                                      height: 60,
-                                      color: const Color.fromARGB(
-                                          255, 110, 185, 223),
+                                      height: 90,
+                                      color: const Color.from(alpha: 1, red: 1, green: 1, blue: 1),
                                       child: ListTile(
                                         onTap: () {
                                           final user =
@@ -246,17 +256,29 @@ class _CourseDetailState extends State<CourseDetail> {
                                           }
                                         },
                                         title: Text(module['title'] ??
-                                            'Untitled Module'),
+                                            'Untitled Module',style: TextStyle(
+                                              fontSize: 18,
+                                              color: Color.fromARGB(255, 0, 0, 0)
+                                            ),),
                                         subtitle: Text(
                                           module['description'] ??
-                                              'No description',
-                                          maxLines: 1,
+                                              'No description',style: TextStyle(
+                                                fontSize: 14,
+                                                color: const Color.fromARGB(215, 0, 0, 0),
+                                              ),
+                                          maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
+                                         trailing: const Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 18,
+                                      color: Color.fromARGB(255, 0, 0, 0),
+                                    ),
                                       ),
                                     ),
                                   ),
-                                );
+                                 ),
+                                 );
                               },
                             ),
                           ),
