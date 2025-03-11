@@ -69,50 +69,164 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Sign Up")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(labelText: "Full Name"),
-            ),
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(labelText: "Email"),
-            ),
-            TextField(
-              controller: password1Controller,
-              decoration: InputDecoration(labelText: "Password"),
-              obscureText: true,
-            ),
-            TextField(
-              controller: password2Controller,
-              decoration: InputDecoration(labelText: "Re-write Password"),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: signUp,
-              child: Text("Sign Up"),
-            ),
-            Center(
-              child: _isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: handleGoogleSignUp,
-                      child: Text("Sign Up with Google"),
+  return Scaffold(
+      appBar: AppBar(title: const Text("Login")),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF2D5DA1), // Dark blue (Top)
+              Color.fromARGB(255, 231, 231, 231), // Light gray (Bottom)
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: [0.2, 0.8], // Adjust the proportion of blue
+          ),
+        ),
+        child: Center( // Centers everything vertically
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Makes the column wrap content
+              children: [
+                const Text(
+                  "Hello, Register to get Started",
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Full Name Field
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: "Full Name",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(11)),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Email Field
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: "Email",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(11)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                
+                TextField(
+                  controller: password1Controller,
+                  decoration: const InputDecoration(
+                    labelText: "Password",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(11)),
+                    ),
+                  ),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 10),
+
+                
+                TextField(
+                  controller: password2Controller,
+                  decoration: const InputDecoration(
+                    labelText: "Re-write Password",
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                       borderRadius: BorderRadius.all(Radius.circular(11)),
+                    ),
+                  ),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 20),
+
+               
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: signUp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2D5DA1),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                    ),
+                    child: const Text("Sign Up", style: TextStyle(fontSize: 18)),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                
+                Center(
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: handleGoogleSignUp,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black,
+                              minimumSize: const Size(double.infinity, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(11),
+                                side: const BorderSide(color: Color(0xFF2D5DA1), width: 1),
+                              ),
+                            ),
+                            // child: const Text(
+                            //   "Sign Up with Google",
+                            //   style: TextStyle(fontSize: 18),
+                            // ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset('assets/images/googleIcon.png', height: 24), // Google logo
+                                const SizedBox(width: 10),
+                                const Text(
+                                  "Sign in with Google",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 20),
+
+                
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
+                  child: const Text(
+                    "Already have an account? Log In",
+                    style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
+                  ),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-              child: Text("Already have an account? Log In"),
-            ),
-          ],
+          ),
         ),
       ),
     );
