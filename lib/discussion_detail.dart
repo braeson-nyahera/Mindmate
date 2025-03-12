@@ -139,6 +139,7 @@ class _DiscussionDetailState extends State<DiscussionDetail> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Discussion'),
+        centerTitle: true,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -171,26 +172,32 @@ class _DiscussionDetailState extends State<DiscussionDetail> {
               : Column(
                   children: [
                     // Discussion question card
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
+                 SizedBox(
+                    width: double.infinity, // Makes it take the full width
+                    child: Container(
+                      margin: EdgeInsets.symmetric(vertical: 16),
                       child: Card(
-                        elevation: 4,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                discussionData?['question'] ??
-                                    'Error accessing the discussion question',
-                                style: const TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
+                        color: Colors.transparent, 
+                        elevation: 0,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              
+                              
+                              child: Text(
+                                discussionData?['question'] ?? 'Error accessing the discussion question',
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
+                  ),
+
+
 
                     // Comments section
                     Expanded(

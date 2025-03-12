@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mindmate/components.dart';
+import 'bottom_bar.dart';
 import 'package:mindmate/message_detail.dart';
-import 'package:mindmate/top_bar.dart';
+
 import 'package:rxdart/rxdart.dart';
 
 class MessageListScreen extends StatefulWidget {
@@ -166,8 +166,24 @@ class _MessageListScreenState extends State<MessageListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: TopBar(title: 'Conversations'),
-      drawer: DrawerWidget(),
+      bottomNavigationBar: Bottombar(currentIndex: 0),
+      appBar: AppBar(
+        toolbarHeight: 80,
+        // backgroundColor: const Color(0xFF2D5DA1),
+        title: const Text(
+          "Chats",
+          style: TextStyle(
+            fontSize: 25, // Adjusts the font size
+            fontWeight: FontWeight.bold, // Makes the text bold
+            color: Colors.black,
+          ),
+        ),
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            }),
+      ),
       body: Column(children: [
         Expanded(
           child: StreamBuilder<List<Map<String, dynamic>>>(
