@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mindmate/courses.dart';
-import 'package:mindmate/firebase_test.dart';
 import 'package:mindmate/forum.dart';
 import 'package:mindmate/home.dart';
 import 'package:mindmate/message_list.dart';
