@@ -233,7 +233,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       );
                     },
                     child: Container(
-                          width: 250,
+                          width: 150,
                           height: 210,
                           margin: EdgeInsets.symmetric(horizontal: 8, vertical: 10), // Add vertical margin
                           decoration: BoxDecoration(
@@ -259,13 +259,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                 child: data['imageUrl'] != null
                                     ? Image.network(
                                         data['imageUrl'],
-                                        width: 250,
+                                        width: 150,
                                         height: 120,
                                         fit: BoxFit.cover,
                                       )
                                     : Image.asset(
                                         'assets/images/mmBareLogo.png',
-                                        width: 250,
+                                        width: 150,
                                         height: 120,
                                         fit: BoxFit.fill,
                                       ),
@@ -284,6 +284,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                           fontWeight: FontWeight.bold,
                                           color: Colors.black,
                                         ),
+                                         maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                       Text(
                                         data['Author'] ?? "Unknown Author",
@@ -291,6 +293,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           fontSize: 12,
                                           color: Colors.black87,
                                         ),
+                                       
                                       ),
                                     ],
                                   ),
