@@ -3,8 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class MessageDetail extends StatefulWidget {
-  const MessageDetail(
-      {super.key, required this.authorId, required this.receiverId});
+  MessageDetail({super.key, required this.authorId, required this.receiverId});
+  final CollectionReference messages =
+      FirebaseFirestore.instance.collection('messages');
 
   final String authorId;
   final String receiverId;
@@ -39,6 +40,7 @@ class MessageStream {
 
 class _MessageDetailState extends State<MessageDetail> {
   final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  final TextEditingController _messageController = TextEditingController();
 
   // Cache for user data to avoid redundant fetches
   final Map<String, Future<DocumentSnapshot>> _userCache = {};
@@ -90,6 +92,46 @@ class _MessageDetailState extends State<MessageDetail> {
     }
   }
 
+  Future<void> _sendMessage() async {
+    String message = _messageController.text.trim();
+
+    if (message.isNotEmpty) {
+      await widget.messages.add({
+        "message": message,
+        "CreatedAt": FieldValue.serverTimestamp(),
+        "Author_Id": widget.authorId,
+        "Receiver_Id": widget.receiverId,
+      });
+
+      _messageController.clear();
+    }
+  }
+
+  String _formatTimestamp(Timestamp? timestamp) {
+    if (timestamp == null) return "Unknown time";
+
+    DateTime dateTime = timestamp.toDate();
+    DateTime now = DateTime.now();
+
+    // If it's today, just show the time
+    if (dateTime.year == now.year &&
+        dateTime.month == now.month &&
+        dateTime.day == now.day) {
+      return "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}";
+    }
+
+    // If it's yesterday, show "Yesterday"
+    DateTime yesterday = now.subtract(const Duration(days: 1));
+    if (dateTime.year == yesterday.year &&
+        dateTime.month == yesterday.month &&
+        dateTime.day == yesterday.day) {
+      return "Yesterday";
+    }
+
+    // Otherwise show the date
+    return "${dateTime.day}/${dateTime.month}/${dateTime.year}";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -135,9 +177,7 @@ class _MessageDetailState extends State<MessageDetail> {
                   // Determine if the current user is author or receiver
                   bool isAuthor = currentUserId == data['Author_Id'];
 
-                  String createdAt =
-                      (data['CreatedAt'] as Timestamp?)?.toDate().toString() ??
-                          "Unknown time";
+                  String createdAt = _formatTimestamp(data['CreatedAt']);
 
                   String messageContent = data['message'] ?? "No content";
 
@@ -210,6 +250,7 @@ class _MessageDetailState extends State<MessageDetail> {
             children: [
               Expanded(
                 child: TextField(
+                  controller: _messageController,
                   decoration: InputDecoration(
                     hintText: "Type a message",
                     border: OutlineInputBorder(
@@ -224,7 +265,7 @@ class _MessageDetailState extends State<MessageDetail> {
               IconButton(
                 icon: Icon(Icons.send),
                 onPressed: () {
-                  // TODO: Implement sending message
+                  _sendMessage();
                 },
               ),
             ],

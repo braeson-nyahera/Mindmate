@@ -6,14 +6,12 @@ import 'package:mindmate/courses.dart';
 import 'package:mindmate/firebase_options.dart';
 import 'package:mindmate/forum.dart';
 import 'package:mindmate/landing_page.dart';
-import 'package:mindmate/message_detail.dart';
 import 'package:mindmate/notifications.dart';
 import 'package:mindmate/profile.dart';
 import 'package:mindmate/tutors.dart';
 import 'package:mindmate/users/login.dart';
 import 'package:mindmate/users/signup_screen.dart';
 import 'package:mindmate/message_list.dart';
-import 'module_detail.dart';
 import 'home.dart';
 
 void main() async {
@@ -44,8 +42,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: MyHomePage(title: 'MindMate'),
-     initialRoute: '/landing_page',
-    
+      initialRoute: '/landing_page',
       routes: {
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignUpScreen(),
@@ -57,9 +54,8 @@ class MyApp extends StatelessWidget {
         '/notifications': (context) => NotificationsWidget(),
         '/landing_page': (context) => LandingWidget(),
         '/chats': (context) => ChatsWidget(),
-        '/message_details': (context)=> MessageListScreen(),
-        
-        },
+        '/message_details': (context) => MessageListScreen(),
+      },
     );
   }
 }
