@@ -7,7 +7,9 @@ import 'package:mindmate/message_detail.dart';
 import 'package:rxdart/rxdart.dart';
 
 class MessageListScreen extends StatefulWidget {
-  const MessageListScreen({super.key});
+  MessageListScreen({super.key});
+  final CollectionReference users =
+      FirebaseFirestore.instance.collection('users');
 
   @override
   State<MessageListScreen> createState() => _MessageListScreenState();
@@ -52,7 +54,7 @@ class ConversationStream {
 
           // Create a conversation key that uniquely identifies this conversation
           // regardless of who is sender or receiver
-          String conversationKey = [userId, otherUserId].toSet().join('_');
+          String conversationKey = {userId, otherUserId}.join('_');
 
           // If this conversation doesn't exist in our map yet, or if this message
           // is more recent than the one we have, update it
@@ -86,13 +88,175 @@ class ConversationStream {
 
 class _MessageListScreenState extends State<MessageListScreen> {
   final String user = FirebaseAuth.instance.currentUser!.uid;
+  List<Map<String, dynamic>> users = [];
+  String errorMessage = "";
 
   // Cache for user data to avoid redundant fetches
   final Map<String, Future<DocumentSnapshot>> _userCache = {};
 
+  Future<List<Map<String, dynamic>>> getUsernames(String userId) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .where('uid', isNotEqualTo: userId)
+              .get();
+
+      // Add document ID to each module data
+      return querySnapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data();
+        data['id'] = doc.id; // Add the document ID to the data
+        return data;
+      }).toList();
+    } catch (e) {
+      print("Error fetching modules: $e");
+      return [];
+    }
+  }
+
+  Future<void> fetchUsers() async {
+    try {
+      List<Map<String, dynamic>> fetchedUsers = await getUsernames(user);
+      setState(() {
+        users = fetchedUsers;
+      });
+    } catch (e) {
+      print("Error in fetchModules: $e");
+      setState(() {
+        errorMessage = "Failed to load usernames";
+      });
+    }
+  }
+
+  void _showNewMessageDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        double screenHeight = MediaQuery.of(context).size.height;
+
+        return Align(
+          alignment: Alignment.center,
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: SizedBox(
+              width: 350, // Adaptive width
+              height: screenHeight * 0.5, // Adjust height based on screen
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Choose the recipient",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D5DA1),
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Expanded(
+                      child: users.isEmpty
+                          ? Center(
+                              child: Text(
+                                "No users available",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: users.length,
+                              itemBuilder: (context, index) {
+                                final userslist = users[index];
+                                return Card(
+                                  elevation: 3,
+                                  margin: EdgeInsets.symmetric(vertical: 6),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () {
+                                      final user =
+                                          FirebaseAuth.instance.currentUser;
+                                      if (user != null &&
+                                          userslist['id'] != null) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => MessageDetail(
+                                              authorId: user.uid,
+                                              receiverId: userslist['id'],
+                                            ),
+                                          ),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                'Unable to load users. Please try again.'),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Row(
+                                        children: [
+                                          CircleAvatar(
+                                            backgroundColor: Colors.blue[100],
+                                            child: Icon(Icons.person,
+                                                color: Colors.blue[700]),
+                                          ),
+                                          SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              userslist['name'] ??
+                                                  'Unknown User',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            "Cancel",
+                            style: TextStyle(color: Colors.grey[700]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    fetchUsers();
   }
 
   // Fetch user details from Firestore
@@ -300,6 +464,12 @@ class _MessageListScreenState extends State<MessageListScreen> {
           ),
         ),
       ]),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showNewMessageDialog();
+        },
+        child: Icon(Icons.message),
+      ),
     );
   }
 }

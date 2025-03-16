@@ -16,8 +16,8 @@ class ForumsWidget extends StatefulWidget {
   State<ForumsWidget> createState() => _ForumsWidgetState();
 }
 class _ForumsWidgetState extends State<ForumsWidget> {
-  TextEditingController _questionController = TextEditingController();
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _questionController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   String searchQuery = '';
 
 

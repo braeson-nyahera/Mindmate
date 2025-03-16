@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mindmate/notifications.dart';
-import 'chats.dart';
 import 'package:mindmate/users/authservice.dart';
 
 class TopBar extends StatelessWidget implements PreferredSizeWidget {
