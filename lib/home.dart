@@ -58,6 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
          
       // centerTitle: true, 
       automaticallyImplyLeading: false,
+      toolbarHeight: 80,
       title: Image.asset(
         'assets/images/name.png', // Replace with the actual path to your logo
         height: 35, // Adjust height as needed
@@ -186,7 +187,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Container(
-                height: 280,
+                height: 270,
                 margin: EdgeInsets.all(10),
                 decoration: BoxDecoration(),
                 child: Column(

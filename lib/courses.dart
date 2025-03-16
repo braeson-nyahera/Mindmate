@@ -136,6 +136,8 @@ class _CoursesListState extends State<CoursesList> {
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: const Color.fromARGB(255, 0, 0, 0)),
+                              maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.left,
                         ),
                         SizedBox(height: 5),

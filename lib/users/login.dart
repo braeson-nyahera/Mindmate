@@ -16,20 +16,20 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   final AuthService authService = AuthService();
 
-  void signIn() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
+  // void signIn() async {
+  //   String email = emailController.text.trim();
+  //   String password = passwordController.text.trim();
 
-    if (email.isNotEmpty && password.isNotEmpty) {
-      User? user = await authService.signIn(email, password);
-      if (user != null) {
-        print("User Logged In: ${user.email}");
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        print("Login Failed");
-      }
-    }
-  }
+  //   if (email.isNotEmpty && password.isNotEmpty) {
+  //     User? user = await authService.signIn(email, password);
+  //     if (user != null) {
+  //       print("User Logged In: ${user.email}");
+  //       Navigator.pushReplacementNamed(context, '/home');
+  //     } else {
+  //       print("Login Failed");
+  //     }
+  //   }
+  // }
 
   void handleGoogleSignIn(BuildContext context) async {
     User? user = await authService.signInWithGoogle();
@@ -40,6 +40,40 @@ class _LoginScreenState extends State<LoginScreen> {
       print("Google Sign-In Failed");
     }
   }
+
+void signIn() async {
+  String email = emailController.text.trim();
+  String password = passwordController.text.trim();
+
+  if (email.isEmpty || password.isEmpty) {
+    showError("Email and password cannot be empty");
+    return;
+  }
+
+  try {
+    User? user = await authService.signIn(email, password);
+    if (user != null) {
+      print("User Logged In: ${user.email}");
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      showError("Invalid email or password. Please try again.");
+    }
+  } catch (e) {
+    showError("Error: ${e.toString()}");
+  }
+}
+
+void showError(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red,
+      duration: const Duration(seconds: 3),
+    ),
+  );
+}
+
+
 
   @override
  Widget build(BuildContext context) {
