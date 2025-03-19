@@ -268,6 +268,7 @@ class _MessageListScreenState extends State<MessageListScreen> {
           .doc(userId)
           .get()
           .catchError((error) {
+        // ignore: invalid_return_type_for_catch_error
         return null;
       });
     }
