@@ -14,6 +14,17 @@ class MessageListScreen extends StatefulWidget {
   @override
   State<MessageListScreen> createState() => _MessageListScreenState();
 }
+Future<int> _countUnreadMessages(String otherUserId, String userId) async {
+  QuerySnapshot unreadMessages = await FirebaseFirestore.instance
+      .collection('messages')
+      .where('Receiver_Id', isEqualTo: userId) // Pass userId dynamically
+      .where('Author_Id', isEqualTo: otherUserId)
+      .where('isRead', isEqualTo: false) // Only count unread messages
+      .get();
+
+  return unreadMessages.docs.length;
+}
+
 
 class ConversationStream {
   static Stream<List<Map<String, dynamic>>> getConversations(String userId) {
@@ -441,81 +452,101 @@ List<Map<String, dynamic>> _filteredUsers() {
                   return FutureBuilder<DocumentSnapshot>(
                     future: _getUserDetails(otherUserId),
                     builder: (context, userSnapshot) {
-                      // Extract user name, handle loading and errors
                       String userName = "Loading...";
 
-                      if (userSnapshot.connectionState ==
-                          ConnectionState.done) {
+                      if (userSnapshot.connectionState == ConnectionState.done) {
                         userName = _extractUserName(userSnapshot.data);
                       }
 
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 4.0),
-                        child: ListTile(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MessageDetail(
-                                    authorId: isAuthor ? user : otherUserId,
-                                    receiverId: isAuthor ? otherUserId : user),
+                      return FutureBuilder<int>(
+                      future: _countUnreadMessages(otherUserId, user),
+                        builder: (context, unreadSnapshot) {
+                          int unreadCount = unreadSnapshot.data ?? 0;
+
+                          return Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                            child: ListTile(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MessageDetail(
+                                      authorId: isAuthor ? user : otherUserId,
+                                      receiverId: isAuthor ? otherUserId : user,
+                                    ),
+                                  ),
+                                );
+                              },
+                              leading: Stack(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: Colors.blue[100],
+                                    child: Text(
+                                      userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                                      style: TextStyle(color: Colors.blue[800]),
+                                    ),
+                                  ),
+                                  if (unreadCount > 0)
+                                    Positioned(
+                                      left: -5, // Move badge to far left
+                                      top: 10,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        constraints:
+                                            const BoxConstraints(minWidth: 24, minHeight: 24),
+                                        child: Text(
+                                          unreadCount.toString(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
-                            );
-                          },
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.blue[100],
-                            child: Text(
-                              userName.isNotEmpty
-                                  ? userName[0].toUpperCase()
-                                  : '?',
-                              style: TextStyle(
-                                color: Colors.blue[800],
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      userName,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  Text(
+                                    formattedTime,
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                              subtitle: Row(
+                                children: [
+                                  isAuthor
+                                      ? const Icon(Icons.arrow_outward, size: 14, color: Colors.blue)
+                                      : const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      messageContent,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          title: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  userName,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              Text(
-                                formattedTime,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                          subtitle: Row(
-                            children: [
-                              // Show a send/receive icon
-                              isAuthor
-                                  ? const Icon(Icons.arrow_outward,
-                                      size: 14, color: Colors.blue)
-                                  : //const Icon(Icons.arrow_downward,
-                              //         size: 14, color: Colors.green),
-                               const SizedBox(width: 4),
-                            // Show message preview
-                              Expanded(
-                                child: Text(
-                                  messageContent,
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                          );
+                        },
                       );
                     },
                   );
+
                 },
               );
             },

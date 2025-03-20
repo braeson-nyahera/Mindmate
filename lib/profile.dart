@@ -250,6 +250,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                 ),
                               ),
                             ),
+                            
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16),
                               child: Container(

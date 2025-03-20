@@ -28,6 +28,67 @@ class _CoursesListState extends State<CoursesList> {
     super.initState();
     fetchEnrolledCourses();
   }
+  
+
+  //
+Future<void> enrollInCourse(String courseId) async {
+  try {
+    // Fetch course details to get the title
+    DocumentSnapshot<Map<String, dynamic>> courseDoc =
+        await FirebaseFirestore.instance.collection('courses').doc(courseId).get();
+    
+    if (!courseDoc.exists) {
+      throw Exception("Course not found");
+    }
+
+    String courseTitle = courseDoc.data()?['title'] ?? "Unknown Course";
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+
+    // Enroll user
+    await FirebaseFirestore.instance.collection('enrolls').add({
+      'course': courseId,
+      'user': userId,
+      'time_enrolled': Timestamp.now(),
+    });
+
+    // Add a notification
+    await FirebaseFirestore.instance.collection('notifications').add({
+      'userId': userId,
+      'message': 'You have successfully enrolled in "$courseTitle"!',
+      'timestamp': Timestamp.now(),
+      'courseId': courseId,
+    });
+
+    // Update UI state
+    setState(() {
+      enrolledCourses.add(courseId);
+    });
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Successfully enrolled in "$courseTitle"!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  } catch (e) {
+    print("Error enrolling in course: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Failed to enroll in course. Please try again.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
+
+
+//
+
+
+
+
 
   // Fetch all courses the current user has enrolled in
   Future<void> fetchEnrolledCourses() async {
@@ -36,7 +97,9 @@ class _CoursesListState extends State<CoursesList> {
     });
 
     try {
+      
       final userId = FirebaseAuth.instance.currentUser!.uid;
+      
 
       // Get a direct reference to the enrolls collection
       final enrollsRef = FirebaseFirestore.instance.collection('enrolls');
@@ -67,7 +130,7 @@ class _CoursesListState extends State<CoursesList> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double aspectRatio = screenWidth < 600 ? 0.7 : 0.9;
+    double aspectRatio = screenWidth < 600 ? 0.63 : 0.73;
     int crossAxisCount = screenWidth < 600 ? 2 : (screenWidth < 900 ? 3 : 4);
 
     return Scaffold(
@@ -195,7 +258,9 @@ class _CoursesListState extends State<CoursesList> {
                               Text(
                                 "By ${data['Author'] ?? 'Unknown'}",
                                 style: TextStyle(
-                                    color: const Color.fromARGB(179, 0, 0, 0)),
+                                color: const Color.fromARGB(179, 0, 0, 0)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.left,
                               ),
                               SizedBox(height: 5),
@@ -204,7 +269,7 @@ class _CoursesListState extends State<CoursesList> {
                                       decoration: BoxDecoration(
                                         color:
                                             Color.fromARGB(255, 52, 152, 219),
-                                        borderRadius: BorderRadius.circular(14),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
                                       width: 80,
                                       height: 30,
@@ -219,47 +284,11 @@ class _CoursesListState extends State<CoursesList> {
                                       ),
                                     )
                                   : GestureDetector(
-                                      onTap: () async {
-                                        try {
-                                          // VERIFY field names match exactly what you check for
-                                          await widget.enrolls.add({
-                                            'course':
-                                                courseId, // Must match field name in query
-                                            'user': FirebaseAuth
-                                                .instance
-                                                .currentUser!
-                                                .uid, // Must match field name in query
-                                            'time_enrolled': Timestamp.now(),
-                                          });
-
-                                          // Update local state to reflect new enrollment
-                                          setState(() {
-                                            enrolledCourses.add(courseId);
-                                          });
-
-                                          // Show success message
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                                content: Text(
-                                                    'Successfully enrolled in course!')),
-                                          );
-                                        } catch (e) {
-                                          print('Error enrolling: $e');
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                                content: Text(
-                                                    'Failed to enroll: $e')),
-                                          );
-                                        }
-                                      },
+                                      onTap: () => enrollInCourse(courseId),  // Use the extracted function
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          color:
-                                              Color.fromARGB(255, 48, 208, 64),
-                                          borderRadius:
-                                              BorderRadius.circular(14),
+                                          color: Color.fromARGB(255, 48, 208, 64),
+                                          borderRadius: BorderRadius.circular(6),
                                         ),
                                         width: 60,
                                         height: 30,
@@ -273,7 +302,8 @@ class _CoursesListState extends State<CoursesList> {
                                           ),
                                         ),
                                       ),
-                                    )
+                                    ),
+
                             ],
                           ),
                         ),
