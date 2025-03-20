@@ -21,13 +21,13 @@ class _TutorsWidgetState extends State<TutorsWidget> {
       appBar: TopBar(title: 'Tutors'),
       bottomNavigationBar: Bottombar(currentIndex: 3),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('courses').snapshots(),
+        stream: FirebaseFirestore.instance.collection('users').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text("No courses yet!"));
+            return Center(child: Text("No tutors yet!"));
           }
 
           var courseLists = snapshot.data!.docs;
@@ -46,10 +46,7 @@ class _TutorsWidgetState extends State<TutorsWidget> {
                 var data = courseLists[index].data() as Map<String, dynamic>;
 
                 return GestureDetector(
-                  onTap: () {
-                    
-                    
-                  },
+                  onTap: () {},
                   child: Container(
                     decoration: BoxDecoration(
                       boxShadow: [
@@ -69,9 +66,10 @@ class _TutorsWidgetState extends State<TutorsWidget> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: data['imageUrl'] != null && data['imageUrl'].isNotEmpty
+                          child: data['photoURL'] != null &&
+                                  data['photoURL'].isNotEmpty
                               ? Image.network(
-                                  data['imageUrl'],
+                                  data['photoURL'],
                                   height: 150,
                                   width: double.infinity,
                                   fit: BoxFit.fill,
@@ -85,7 +83,7 @@ class _TutorsWidgetState extends State<TutorsWidget> {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          data['title'] ?? 'No Title',
+                          data['name'] ?? 'Unknown',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -97,7 +95,7 @@ class _TutorsWidgetState extends State<TutorsWidget> {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          "By ${data['Author'] ?? 'Unknown'}",
+                          "Main field: ${data['mainField'] ?? 'Not specidied'}",
                           style: TextStyle(color: Colors.black87),
                           textAlign: TextAlign.left,
                         ),

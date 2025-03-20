@@ -87,28 +87,6 @@ class _MyHomePageState extends State<MyHomePage> {
               );
             },
           ),
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, size: 32),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => NotificationsWidget(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.chat),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MessageListScreen(),
-                ),
-              );
-            },
-          ),
           // IconButton(
           //   icon: Icon(Icons.logout),
           //   onPressed: () {
@@ -191,14 +169,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
 
                       SizedBox(height: 20),
-                      Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Text(
-                          "Continue Learning",
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ),
+
                       // Featured Section Placeholder
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
@@ -206,87 +177,18 @@ class _MyHomePageState extends State<MyHomePage> {
                           height: 250,
                           width: double.infinity,
                           color: const Color.fromARGB(255, 184, 199, 226),
-                          child: Center(
-                            child: Text(
-                              "No progress to show!",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
                         ),
                       ),
 
                       SizedBox(height: 20),
 
                       // Recommended Courses Section (DYNAMIC FROM FIRESTORE)
-
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
                           height: 270,
                           margin: EdgeInsets.all(10),
                           decoration: BoxDecoration(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Text(
-                        "Recommended Courses →",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 200, // Height for scrolling area
-                      child: StreamBuilder<QuerySnapshot>(
-                        stream: _firestore.collection('courses').limit(10).snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator());
-                          }
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                            return Center(child: Text("No courses available!"));
-                          }
-
-              var courseLists = snapshot.data!.docs;
-
-              return ListView.builder(
-                scrollDirection: Axis.horizontal, // Horizontal scroll
-                itemCount: courseLists.length,
-                itemBuilder: (context, index) {
-                  var data = courseLists[index].data() as Map<String, dynamic>;
-                  var courseId = courseLists[index].id;
-
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CourseDetail(
-                            courseId: courseId,
-                            userId: _auth.currentUser!.uid,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                          width: 150,
-                          height: 210,
-                          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 10), // Add vertical margin
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: Offset(3, 3), // Only downward shadow
-                              ),
-                            ],
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -298,7 +200,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold),
                                 ),
-
                               ),
                               SizedBox(
                                 height: 200, // Height for scrolling area
@@ -370,197 +271,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Padding(
-                                                  padding: EdgeInsets.all(10),
-                                                  child: Text(
-                                                    "Recommended Courses →",
-                                                    style: TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.bold),
+                                                ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                    topLeft:
+                                                        Radius.circular(10),
+                                                    topRight:
+                                                        Radius.circular(10),
                                                   ),
-                                                ),
-                                                SizedBox(
-                                                  height:
-                                                      200, // Height for scrolling area
-                                                  child: StreamBuilder<
-                                                      QuerySnapshot>(
-                                                    stream: _firestore
-                                                        .collection('courses')
-                                                        .limit(10)
-                                                        .snapshots(),
-                                                    builder:
-                                                        (context, snapshot) {
-                                                      if (snapshot
-                                                              .connectionState ==
-                                                          ConnectionState
-                                                              .waiting) {
-                                                        return Center(
-                                                            child:
-                                                                CircularProgressIndicator());
-                                                      }
-                                                      if (!snapshot.hasData ||
-                                                          snapshot.data!.docs
-                                                              .isEmpty) {
-                                                        return Center(
-                                                            child: Text(
-                                                                "No courses available!"));
-                                                      }
-
-                                                      var courseLists =
-                                                          snapshot.data!.docs;
-
-                                                      return ListView.builder(
-                                                        scrollDirection: Axis
-                                                            .horizontal, // Horizontal scroll
-                                                        itemCount:
-                                                            courseLists.length,
-                                                        itemBuilder:
-                                                            (context, index) {
-                                                          var data =
-                                                              courseLists[index]
-                                                                      .data()
-                                                                  as Map<String,
-                                                                      dynamic>;
-                                                          var courseId =
-                                                              courseLists[index]
-                                                                  .id;
-
-                                                          return GestureDetector(
-                                                            onTap: () {
-                                                              Navigator.push(
-                                                                context,
-                                                                MaterialPageRoute(
-                                                                  builder:
-                                                                      (context) =>
-                                                                          CourseDetail(
-                                                                    courseId:
-                                                                        courseId,
-                                                                    userId: _auth
-                                                                        .currentUser!
-                                                                        .uid,
-                                                                  ),
-                                                                ),
-                                                              );
-                                                            },
-                                                            child: Container(
-                                                              width: 250,
-                                                              height: 210,
-                                                              margin: EdgeInsets
-                                                                  .symmetric(
-                                                                      horizontal:
-                                                                          8,
-                                                                      vertical:
-                                                                          10), // Add vertical margin
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                boxShadow: [
-                                                                  BoxShadow(
-                                                                    color: Colors
-                                                                        .black
-                                                                        .withOpacity(
-                                                                            0.2),
-                                                                    spreadRadius:
-                                                                        2,
-                                                                    blurRadius:
-                                                                        5,
-                                                                    offset: Offset(
-                                                                        3,
-                                                                        3), // Only downward shadow
-                                                                  ),
-                                                                ],
-                                                                color: Colors
-                                                                    .white,
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            8),
-                                                              ),
-                                                              child: Column(
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
-                                                                children: [
-                                                                  ClipRRect(
-                                                                    borderRadius:
-                                                                        BorderRadius
-                                                                            .only(
-                                                                      topLeft: Radius
-                                                                          .circular(
-                                                                              10),
-                                                                      topRight:
-                                                                          Radius.circular(
-                                                                              10),
-                                                                    ),
-                                                                    child: data['imageUrl'] !=
-                                                                            null
-                                                                        ? Image
-                                                                            .network(
-                                                                            data['imageUrl'],
-                                                                            width:
-                                                                                250,
-                                                                            height:
-                                                                                120,
-                                                                            fit:
-                                                                                BoxFit.cover,
-                                                                          )
-                                                                        : Image
-                                                                            .asset(
-                                                                            'assets/images/mmBareLogo.png',
-                                                                            width:
-                                                                                250,
-                                                                            height:
-                                                                                120,
-                                                                            fit:
-                                                                                BoxFit.fill,
-                                                                          ),
-                                                                  ),
-                                                                  Expanded(
-                                                                    child:
-                                                                        Padding(
-                                                                      padding:
-                                                                          EdgeInsets.all(
-                                                                              10),
-                                                                      child:
-                                                                          Column(
-                                                                        crossAxisAlignment:
-                                                                            CrossAxisAlignment.start,
-                                                                        mainAxisAlignment:
-                                                                            MainAxisAlignment.end,
-                                                                        children: [
-                                                                          Text(
-                                                                            data['title'] ??
-                                                                                "No Title",
-                                                                            style:
-                                                                                TextStyle(
-                                                                              fontSize: 16,
-                                                                              fontWeight: FontWeight.bold,
-                                                                              color: Colors.black,
-                                                                            ),
-                                                                          ),
-                                                                          Text(
-                                                                            data['Author'] ??
-                                                                                "Unknown Author",
-                                                                            style:
-                                                                                TextStyle(
-                                                                              fontSize: 12,
-                                                                              color: Colors.black87,
-                                                                            ),
-                                                                          ),
-                                                                        ],
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                          );
-                                                        },
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                                Container(
                                                   child:
                                                       data['imageUrl'] != null
                                                           ? Image.network(
@@ -624,7 +342,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             ],
                           ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
