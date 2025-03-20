@@ -128,38 +128,86 @@ class _MessageListScreenState extends State<MessageListScreen> {
     }
   }
 
-  void _showNewMessageDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        double screenHeight = MediaQuery.of(context).size.height;
+ 
+  TextEditingController searchController = TextEditingController();
+  String searchQuery = "";
 
-        return Align(
-          alignment: Alignment.center,
-          child: Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: SizedBox(
-              width: 350, // Adaptive width
-              height: screenHeight * 0.5, // Adjust height based on screen
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
+
+
+ void _showNewMessageDialog() {
+  showDialog(
+    context: context,
+    builder: (context) {
+      double screenHeight = MediaQuery.of(context).size.height;
+
+      return StatefulBuilder(
+        builder: (context, setDialogState) {  
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: double.infinity,
+                constraints: BoxConstraints(
+                  maxHeight: screenHeight * 0.9,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(11),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                padding: EdgeInsets.all(16.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Choose the recipient",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D5DA1),
-                      ),
+                    // Search Bar with Close Button
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.close, color: Colors.grey[700],size: 30,),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: searchController,
+                            onChanged: (value) {
+                              setDialogState(() {
+                                searchQuery = value.toLowerCase(); // Update inside dialog
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: "Search Name...",
+                              prefixIcon: Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(11),
+                                borderSide: BorderSide(
+                                  color: Color(0xFF2D5DA1),
+                                  width: 0.5,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: EdgeInsets.symmetric(vertical: 0),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 12),
+
+                    // Display the filtered users
                     Expanded(
-                      child: users.isEmpty
+                      child: _filteredUsers().isEmpty
                           ? Center(
                               child: Text(
                                 "No users available",
@@ -167,9 +215,9 @@ class _MessageListScreenState extends State<MessageListScreen> {
                               ),
                             )
                           : ListView.builder(
-                              itemCount: users.length,
+                              itemCount: _filteredUsers().length,
                               itemBuilder: (context, index) {
-                                final userslist = users[index];
+                                final userslist = _filteredUsers()[index];
                                 return Card(
                                   elevation: 3,
                                   margin: EdgeInsets.symmetric(vertical: 6),
@@ -186,7 +234,8 @@ class _MessageListScreenState extends State<MessageListScreen> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => MessageDetail(
+                                            builder: (context) =>
+                                                MessageDetail(
                                               authorId: user.uid,
                                               receiverId: userslist['id'],
                                             ),
@@ -230,28 +279,35 @@ class _MessageListScreenState extends State<MessageListScreen> {
                               },
                             ),
                     ),
-                    SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.grey[700]),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
+    },
+  );
+}
+
+
+// Function to filter users based on the search query
+List<Map<String, dynamic>> _filteredUsers() {
+  if (searchQuery.isEmpty) {
+    return users;
   }
+  return users.where((user) {
+    String fullName = (user['name'] ?? '').toLowerCase();
+    List<String> nameParts = fullName.split(' '); 
+
+    
+    return nameParts.any((word) => word.startsWith(searchQuery));
+  }).toList();
+}
+
+
+
+
 
   @override
   void initState() {
@@ -330,9 +386,10 @@ class _MessageListScreenState extends State<MessageListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: Bottombar(currentIndex: 0),
+      bottomNavigationBar: Bottombar(currentIndex: 5),
       appBar: AppBar(
         toolbarHeight: 80,
+        centerTitle: true,
         // backgroundColor: const Color(0xFF2D5DA1),
         title: const Text(
           "Chats",
@@ -441,10 +498,10 @@ class _MessageListScreenState extends State<MessageListScreen> {
                               isAuthor
                                   ? const Icon(Icons.arrow_outward,
                                       size: 14, color: Colors.blue)
-                                  : const Icon(Icons.arrow_downward,
-                                      size: 14, color: Colors.green),
-                              const SizedBox(width: 4),
-                              // Show message preview
+                                  : //const Icon(Icons.arrow_downward,
+                              //         size: 14, color: Colors.green),
+                               const SizedBox(width: 4),
+                            // Show message preview
                               Expanded(
                                 child: Text(
                                   messageContent,
