@@ -59,6 +59,7 @@ class _MessageDetailState extends State<MessageDetail> {
           .doc(userId)
           .get()
           .catchError((error) {
+        // ignore: invalid_return_type_for_catch_error
         return null;
       });
     }

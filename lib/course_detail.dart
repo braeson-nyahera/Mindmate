@@ -19,19 +19,76 @@ class _CourseDetailState extends State<CourseDetail> {
   bool isLoading = true;
   bool hasError = false;
   String errorMessage = "";
+  bool isEnrolled = false;
 
   @override
   void initState() {
     super.initState();
     fetchCourseDetails();
     fetchModules();
+    checkEnrollmentStatus();
+  }
+
+  /// Check if the user is enrolled in this course
+  Future<void> checkEnrollmentStatus() async {
+    try {
+      // Create a unique enrollment document ID
+      final String enrollmentId = '${widget.userId}_${widget.courseId}';
+
+      // Alternative approach: query for the enrollment document
+      final QuerySnapshot enrollmentQuery = await FirebaseFirestore.instance
+          .collection('enrolls')
+          .where('user', isEqualTo: widget.userId)
+          .where('course', isEqualTo: widget.courseId)
+          .limit(1)
+          .get();
+
+      setState(() {
+        isEnrolled = enrollmentQuery.docs.isNotEmpty;
+      });
+    } catch (e) {
+      print("Error checking enrollment status: $e");
+    }
+  }
+
+  /// Enroll the user in this course
+  Future<void> enrollInCourse() async {
+    try {
+      await FirebaseFirestore.instance.collection('enrolls').add({
+        'course': widget.courseId,
+        'user': widget.userId,
+        'time_enrolled': Timestamp.now(),
+      });
+
+      setState(() {
+        isEnrolled = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Successfully enrolled in course!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      print("Error enrolling in course: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to enroll in course. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   /// Fetch course details
   Future<void> fetchCourseDetails() async {
     try {
       DocumentSnapshot<Map<String, dynamic>> courseSnapshot =
-          await FirebaseFirestore.instance.collection('courses').doc(widget.courseId).get();
+          await FirebaseFirestore.instance
+              .collection('courses')
+              .doc(widget.courseId)
+              .get();
 
       if (courseSnapshot.exists) {
         setState(() {
@@ -138,6 +195,7 @@ class _CourseDetailState extends State<CourseDetail> {
                           });
                           fetchCourseDetails();
                           fetchModules();
+                          checkEnrollmentStatus();
                         },
                         child: const Text('Retry'),
                       ),
@@ -175,6 +233,50 @@ class _CourseDetailState extends State<CourseDetail> {
                               fontSize: 20,
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          // Enrollment status button
+                          isEnrolled
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        const Color.fromARGB(255, 52, 152, 219),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: const Text(
+                                    "Enrolled",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                )
+                              : GestureDetector(
+                                  onTap: enrollInCourse,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromARGB(
+                                          255, 48, 208, 64),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: const Text(
+                                      "Enroll Now",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                         ],
                       ),
                     ),
@@ -212,73 +314,91 @@ class _CourseDetailState extends State<CourseDetail> {
                                     horizontal: 16.0,
                                     vertical: 8.0,
                                   ),
-                                  child:DecoratedBox(decoration: BoxDecoration(
-                                    boxShadow: [
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(boxShadow: [
                                       BoxShadow(
-                                         color: Colors.black.withOpacity(0.2),
+                                        color: Colors.black.withOpacity(0.2),
                                         blurRadius: 5,
                                         spreadRadius: 2,
                                         offset: const Offset(2, 2),
-                                 
                                       )
-                                    ]
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      width: double.infinity,
-                                      height: 90,
-                                      color: const Color.from(alpha: 1, red: 1, green: 1, blue: 1),
-                                      child: ListTile(
-                                        onTap: () {
-                                          final user =
-                                              FirebaseAuth.instance.currentUser;
-                                          if (user != null &&
-                                              module['id'] != null) {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    ModuleDetail(
-                                                  moduleId: module['id'],
-                                                  userId: user.uid,
+                                    ]),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Container(
+                                        width: double.infinity,
+                                        height: 90,
+                                        color: const Color.fromARGB(
+                                            255, 255, 255, 255),
+                                        child: ListTile(
+                                          onTap: () {
+                                            // Only allow access to modules if enrolled
+                                            if (!isEnrolled) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                      'Please enroll in the course to access modules'),
+                                                  backgroundColor:
+                                                      Colors.orange,
                                                 ),
-                                              ),
-                                            );
-                                          } else {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                    'Unable to open module. Please try again.'),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                        title: Text(module['title'] ??
-                                            'Untitled Module',style: TextStyle(
-                                              fontSize: 18,
-                                              color: Color.fromARGB(255, 0, 0, 0)
-                                            ),),
-                                        subtitle: Text(
-                                          module['description'] ??
-                                              'No description',style: TextStyle(
-                                                fontSize: 14,
-                                                color: const Color.fromARGB(215, 0, 0, 0),
-                                              ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
+                                              );
+                                              return;
+                                            }
+
+                                            final user = FirebaseAuth
+                                                .instance.currentUser;
+                                            if (user != null &&
+                                                module['id'] != null) {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      ModuleDetail(
+                                                    moduleId: module['id'],
+                                                    userId: user.uid,
+                                                  ),
+                                                ),
+                                              );
+                                            } else {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                      'Unable to open module. Please try again.'),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          title: Text(
+                                            module['title'] ??
+                                                'Untitled Module',
+                                            style: const TextStyle(
+                                                fontSize: 18,
+                                                color: Color.fromARGB(
+                                                    255, 0, 0, 0)),
+                                          ),
+                                          subtitle: Text(
+                                            module['description'] ??
+                                                'No description',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color:
+                                                  Color.fromARGB(215, 0, 0, 0),
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          trailing: const Icon(
+                                            Icons.arrow_forward_ios,
+                                            size: 18,
+                                            color: Color.fromARGB(255, 0, 0, 0),
+                                          ),
                                         ),
-                                         trailing: const Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 18,
-                                      color: Color.fromARGB(255, 0, 0, 0),
-                                    ),
                                       ),
                                     ),
                                   ),
-                                 ),
-                                 );
+                                );
                               },
                             ),
                           ),

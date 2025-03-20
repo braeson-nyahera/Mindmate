@@ -324,6 +324,7 @@ List<Map<String, dynamic>> _filteredUsers() {
           .doc(userId)
           .get()
           .catchError((error) {
+        // ignore: invalid_return_type_for_catch_error
         return null;
       });
     }
