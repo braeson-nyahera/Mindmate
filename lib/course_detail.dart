@@ -32,9 +32,6 @@ class _CourseDetailState extends State<CourseDetail> {
   /// Check if the user is enrolled in this course
   Future<void> checkEnrollmentStatus() async {
     try {
-      // Create a unique enrollment document ID
-      final String enrollmentId = '${widget.userId}_${widget.courseId}';
-
       // Alternative approach: query for the enrollment document
       final QuerySnapshot enrollmentQuery = await FirebaseFirestore.instance
           .collection('enrolls')
@@ -54,27 +51,28 @@ class _CourseDetailState extends State<CourseDetail> {
   /// Enroll the user in this course
   Future<void> enrollInCourse() async {
     try {
-      DocumentSnapshot<Map<String, dynamic>> courseDoc =
-        await FirebaseFirestore.instance.collection('courses').doc(widget.courseId).get();
-         if (!courseDoc.exists) {
-      throw Exception("Course not found");
-    }
-     String courseTitle = courseDoc.data()?['title'] ?? "Unknown Course";
+      DocumentSnapshot<Map<String, dynamic>> courseDoc = await FirebaseFirestore
+          .instance
+          .collection('courses')
+          .doc(widget.courseId)
+          .get();
+      if (!courseDoc.exists) {
+        throw Exception("Course not found");
+      }
+      String courseTitle = courseDoc.data()?['title'] ?? "Unknown Course";
 
       await FirebaseFirestore.instance.collection('enrolls').add({
         'course': widget.courseId,
         'user': widget.userId,
-        
         'time_enrolled': Timestamp.now(),
       });
-        // Add notification to Firestore
-    await FirebaseFirestore.instance.collection('notifications').add({
-      'userId': widget.userId,
-      'message': 'You have successfully enrolled in "$courseTitle"!',
-      'timestamp': Timestamp.now(),
-      'courseId': widget.courseId, // Optional: For linking to course details
-    });
-
+      // Add notification to Firestore
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': widget.userId,
+        'message': 'You have successfully enrolled in "$courseTitle"!',
+        'timestamp': Timestamp.now(),
+        'courseId': widget.courseId, // Optional: For linking to course details
+      });
 
       setState(() {
         isEnrolled = true;

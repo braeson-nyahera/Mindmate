@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mindmate/appointment.dart';
 import 'package:mindmate/top_bar.dart';
 import 'bottom_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -107,6 +108,25 @@ class _TutorsWidgetState extends State<TutorsWidget> {
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TutorAppointmentForm(),
+            ),
+          );
+        },
+        label: const Text(
+          "Make Appointment",
+          style: TextStyle(
+            color: Color.fromARGB(255, 135, 61, 61),
+            fontWeight: FontWeight.bold,
+            fontSize: 14, // More reasonable font size
+          ),
+        ),
+        icon: const Icon(Icons.add),
       ),
     );
   }

@@ -49,10 +49,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _saveUserToFirestore(User user) async {
     final userDoc = _firestore.collection("users").doc(user.uid);
-
+    var username = nameController.text.trim();
     final userData = {
       "uid": user.uid,
-      "name": user.displayName ?? "No Name",
+      "name": username,
       "email": user.email ?? "No Email",
       "photoURL": user.photoURL ?? "",
       "createdAt": FieldValue.serverTimestamp(),
@@ -88,8 +88,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-  return Scaffold(
-      
+    return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -104,7 +103,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             stops: [0.2, 0.8], // Adjust the proportion of blue
           ),
         ),
-        child: Center( // Centers everything vertically
+        child: Center(
+          // Centers everything vertically
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -148,7 +148,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                
                 TextField(
                   controller: password1Controller,
                   decoration: const InputDecoration(
@@ -163,7 +162,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                
                 TextField(
                   controller: password2Controller,
                   decoration: const InputDecoration(
@@ -171,14 +169,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
-                       borderRadius: BorderRadius.all(Radius.circular(11)),
+                      borderRadius: BorderRadius.all(Radius.circular(11)),
                     ),
                   ),
                   obscureText: true,
                 ),
                 const SizedBox(height: 20),
 
-               
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -191,12 +188,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         borderRadius: BorderRadius.circular(11),
                       ),
                     ),
-                    child: const Text("Sign Up", style: TextStyle(fontSize: 18)),
+                    child:
+                        const Text("Sign Up", style: TextStyle(fontSize: 18)),
                   ),
                 ),
                 const SizedBox(height: 10),
 
-                
                 Center(
                   child: _isLoading
                       ? const CircularProgressIndicator()
@@ -210,7 +207,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               minimumSize: const Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(11),
-                                side: const BorderSide(color: Color(0xFF2D5DA1), width: 1),
+                                side: const BorderSide(
+                                    color: Color(0xFF2D5DA1), width: 1),
                               ),
                             ),
                             // child: const Text(
@@ -220,11 +218,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Image.asset('assets/images/googleIcon.png', height: 24), // Google logo
+                                Image.asset('assets/images/googleIcon.png',
+                                    height: 24), // Google logo
                                 const SizedBox(width: 10),
                                 const Text(
                                   "Continue with Google",
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
@@ -233,7 +234,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                
                 TextButton(
                   onPressed: () {
                     Navigator.pushReplacementNamed(context, '/login');
@@ -254,13 +254,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             fontWeight: FontWeight.bold, // Different weight
                             fontStyle: FontStyle.italic, // Optional italic
                             fontFamily: 'CustomFont', // Change font if needed
-                            color: Color(0xFF2D5DA1), // Optional different color
+                            color:
+                                Color(0xFF2D5DA1), // Optional different color
                           ),
                         ),
                       ],
                     ),
                   ),
-
                 ),
               ],
             ),

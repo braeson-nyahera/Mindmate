@@ -170,97 +170,98 @@ class _MessageDetailState extends State<MessageDetail> {
 
               var messages = snapshot.data!;
 
-            return ListView.builder(
-  itemCount: messages.length,
-  itemBuilder: (context, index) {
-    var data = messages[index].data() as Map<String, dynamic>;
-    bool isAuthor = currentUserId == data['Author_Id'];
-    String createdAt = _formatTimestamp(data['CreatedAt']);
-    String messageContent = data['message'] ?? "No content";
+              return ListView.builder(
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  var data = messages[index].data() as Map<String, dynamic>;
+                  bool isAuthor = currentUserId == data['Author_Id'];
+                  String createdAt = _formatTimestamp(data['CreatedAt']);
+                  String messageContent = data['message'] ?? "No content";
 
-    // Check if the next message is from a different sender
-    bool isLastFromUser = index == messages.length - 1 || 
-        (messages[index + 1].data() as Map<String, dynamic>)['Author_Id'] != data['Author_Id'];
+                  // Check if the next message is from a different sender
+                  bool isLastFromUser = index == messages.length - 1 ||
+                      (messages[index + 1].data()
+                              as Map<String, dynamic>)['Author_Id'] !=
+                          data['Author_Id'];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      child: Row(
-        mainAxisAlignment:
-            isAuthor ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: [
-          // Show avatar for receiver (Left Side), but make invisible if not last from user
-          Opacity(
-            opacity: (!isAuthor && isLastFromUser) ? 1.0 : 0.0,
-            child: CircleAvatar(
-              radius: 16, // Adjust size here
-              backgroundColor: Colors.green[100],
-              child: Text(
-                "?",
-                style: TextStyle(color: Colors.green[800]),
-              ),
-            ),
-          ),
+                  return Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: isAuthor
+                          ? MainAxisAlignment.end
+                          : MainAxisAlignment.start,
+                      children: [
+                        // Only show receiver avatar on receiver messages
+                        if (!isAuthor && isLastFromUser)
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: Colors.green[100],
+                            child: Text(
+                              "?",
+                              style: TextStyle(color: Colors.green[800]),
+                            ),
+                          ),
 
-          SizedBox(width: 8), // Spacing between avatar and message
+                        if (!isAuthor) SizedBox(width: 8),
 
-          // Chat Bubble
-          Container(
-            padding: EdgeInsets.all(10),
-            constraints: BoxConstraints(maxWidth: 250),
-            decoration: BoxDecoration(
-              color: isAuthor ? Colors.blue[100] : const Color(0xFFE8E8E8),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-                bottomLeft: isAuthor ? Radius.circular(12) : Radius.circular(0),
-                bottomRight: isAuthor ? Radius.circular(0) : Radius.circular(12),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  messageContent,
-                  style: TextStyle(fontSize: 16, color: Colors.black),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  createdAt,
-                  style: TextStyle(fontSize: 10, color: Colors.grey[700]),
-                ),
-              ],
-            ),
-          ),
+                        // Chat Bubble
+                        Container(
+                          padding: EdgeInsets.all(10),
+                          constraints: BoxConstraints(maxWidth: 250),
+                          decoration: BoxDecoration(
+                            color: isAuthor
+                                ? Colors.blue[100]
+                                : const Color(0xFFE8E8E8),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              topRight: Radius.circular(12),
+                              bottomLeft: isAuthor
+                                  ? Radius.circular(12)
+                                  : Radius.circular(0),
+                              bottomRight: isAuthor
+                                  ? Radius.circular(0)
+                                  : Radius.circular(12),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                messageContent,
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.black),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                createdAt,
+                                style: TextStyle(
+                                    fontSize: 10, color: Colors.grey[700]),
+                              ),
+                            ],
+                          ),
+                        ),
 
-          SizedBox(width: 8), // Spacing between avatar and message
+                        if (isAuthor) SizedBox(width: 8),
 
-          // Show avatar for sender (Right Side), but make invisible if not last from user
-         Opacity(
-  opacity: (isAuthor && isLastFromUser) ? 1.0 : 0.0,
-  child: Align(
-    alignment: Alignment.bottomCenter, // Aligns to the bottom of the text
-    child: CircleAvatar(
-      radius: 16, // Adjust size if needed
-      backgroundColor: Colors.blue[100],
-      child: Text(
-        "Me",
-        style: TextStyle(
-          color: Colors.blue[800],
-          fontSize: 10,
-        ),
-      ),
-    ),
-  ),
-),
-
-        ],
-      ),
-    );
-  },
-);
-
-
-
+                        // Only show author avatar on author messages
+                        if (isAuthor && isLastFromUser)
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: Colors.blue[100],
+                            child: Text(
+                              "Me",
+                              style: TextStyle(
+                                color: Colors.blue[800],
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              );
             },
           ),
         ),

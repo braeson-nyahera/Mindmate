@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mindmate/bottom_bar.dart';
+import 'package:mindmate/tutor_registration.dart';
 import 'package:mindmate/users/authservice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -32,7 +33,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
   Future<void> _getUserData() async {
     try {
-      var user = await authService.getCurrentUser(); // Fetch user data
+      var user = authService.getCurrentUser(); // Fetch user data
       if (user != null) {
         setState(() {
           _userData = {
@@ -250,7 +251,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                 ),
                               ),
                             ),
-                            
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16),
                               child: Container(
@@ -479,6 +479,25 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     ],
                   ),
                 ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TutorRegistrationForm(),
+            ),
+          );
+        },
+        label: const Text(
+          "Become a Tutor",
+          style: TextStyle(
+            color: Color.fromARGB(255, 135, 61, 61),
+            fontWeight: FontWeight.bold,
+            fontSize: 14, // More reasonable font size
+          ),
+        ),
+        icon: const Icon(Icons.border_color_outlined),
+      ),
     );
   }
 }
