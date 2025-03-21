@@ -165,50 +165,70 @@ class _ProfileWidgetState extends State<ProfileWidget> {
         "${appointmentDate.day}/${appointmentDate.month}/${appointmentDate.year}";
     String formattedTime =
         "${appointmentDate.hour}:${appointmentDate.minute.toString().padLeft(2, '0')}";
-
+    final Future<QuerySnapshot<Map<String, dynamic>>> tutor = FirebaseFirestore
+        .instance
+        .collection('users')
+        .where('uid', isEqualTo: appointment['tutorId'])
+        .get();
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Appointment Details"),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Tutor: ${appointment['tutorName'] ?? 'Unknown'}"),
-                SizedBox(height: 8),
-                Text("Date: $formattedDate"),
-                SizedBox(height: 4),
-                Text("Time: $formattedTime"),
-                SizedBox(height: 8),
-                Text("Course: ${appointment['courseName'] ?? 'Not specified'}"),
-                SizedBox(height: 8),
-                Text("Status: ${appointment['status'] ?? 'pending'}"),
-                SizedBox(height: 8),
-                if (appointment['notes'] != null &&
-                    appointment['notes'].isNotEmpty)
-                  Text("Notes: ${appointment['notes']}"),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("Close"),
-            ),
-            if (appointment['status'] != 'cancelled')
-              TextButton(
-                onPressed: () {
-                  _cancelAppointment(appointment['id']);
-                  Navigator.pop(context);
-                },
-                child: Text("Cancel Appointment",
-                    style: TextStyle(color: Colors.red)),
+        return FutureBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          future: tutor,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return AlertDialog(
+                title: Text("Loading..."),
+                content: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final tutorName = snapshot.hasData && snapshot.data!.docs.isNotEmpty
+                ? snapshot.data!.docs[0].data()['name'] ?? 'Unknown'
+                : 'Unknown';
+            return AlertDialog(
+              title: Text("Appointment Details"),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("Tutor: ${tutorName ?? 'Unknown'}"),
+                    SizedBox(height: 8),
+                    Text("Date: $formattedDate"),
+                    SizedBox(height: 4),
+                    Text("Time: $appointment['timeSlot']"),
+                    SizedBox(height: 8),
+                    Text(
+                        "Course: ${appointment['subject'] ?? 'Not specified'}"),
+                    SizedBox(height: 8),
+                    Text("Status: ${appointment['status'] ?? 'pending'}"),
+                    SizedBox(height: 8),
+                    if (appointment['notes'] != null &&
+                        appointment['notes'].isNotEmpty)
+                      Text("Notes: ${appointment['notes']}"),
+                  ],
+                ),
               ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text("Close"),
+                ),
+                if (appointment['status'] != 'cancelled')
+                  TextButton(
+                    onPressed: () {
+                      _cancelAppointment(appointment['id']);
+                      Navigator.pop(context);
+                    },
+                    child: Text("Cancel Appointment",
+                        style: TextStyle(color: Colors.red)),
+                  ),
+              ],
+            );
+          },
         );
       },
     );
@@ -298,9 +318,9 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text("Date: $formattedDate"),
-                                Text("Time: $formattedTime"),
+                                Text(appointment['timeSlot']),
                                 Text(
-                                    "Course: ${appointment['courseName'] ?? 'Not specified'}"),
+                                    "Course: ${appointment['subject'] ?? 'Not specified'}"),
                               ],
                             ),
                             trailing: Container(
