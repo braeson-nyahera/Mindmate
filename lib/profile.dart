@@ -22,13 +22,15 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   User? _user;
   Set<String> enrolledCourses = {};
+  List<Map<String, dynamic>> userAppointments = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _getUserData();
-    fetchEnrolledCourses(); // Make sure to call this method to fetch enrolled courses
+    fetchEnrolledCourses();
+    fetchUserAppointments();
   }
 
   Future<void> _getUserData() async {
@@ -120,6 +122,221 @@ class _ProfileWidgetState extends State<ProfileWidget> {
         isLoading = false;
       });
     }
+  }
+
+  Future<void> fetchUserAppointments() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+
+      // Query all appointments for this user, ordered by date in descending order
+      final QuerySnapshot appointmentsSnapshot = await _firestore
+          .collection('appointments')
+          .where('userId', isEqualTo: userId)
+          .orderBy('date', descending: true)
+          .get();
+
+      setState(() {
+        userAppointments = appointmentsSnapshot.docs
+            .map((doc) => {
+                  'id': doc.id,
+                  ...doc.data() as Map<String, dynamic>,
+                })
+            .toList();
+        isLoading = false;
+      });
+
+      print('User appointments: $userAppointments'); // Debug print
+    } catch (e) {
+      print('Error fetching user appointments: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _showAppointmentDetails(Map<String, dynamic> appointment) {
+    DateTime appointmentDate =
+        appointment['appointmentDate']?.toDate() ?? DateTime.now();
+    String formattedDate =
+        "${appointmentDate.day}/${appointmentDate.month}/${appointmentDate.year}";
+    String formattedTime =
+        "${appointmentDate.hour}:${appointmentDate.minute.toString().padLeft(2, '0')}";
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Appointment Details"),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Tutor: ${appointment['tutorName'] ?? 'Unknown'}"),
+                SizedBox(height: 8),
+                Text("Date: $formattedDate"),
+                SizedBox(height: 4),
+                Text("Time: $formattedTime"),
+                SizedBox(height: 8),
+                Text("Course: ${appointment['courseName'] ?? 'Not specified'}"),
+                SizedBox(height: 8),
+                Text("Status: ${appointment['status'] ?? 'pending'}"),
+                SizedBox(height: 8),
+                if (appointment['notes'] != null &&
+                    appointment['notes'].isNotEmpty)
+                  Text("Notes: ${appointment['notes']}"),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Close"),
+            ),
+            if (appointment['status'] != 'cancelled')
+              TextButton(
+                onPressed: () {
+                  _cancelAppointment(appointment['id']);
+                  Navigator.pop(context);
+                },
+                child: Text("Cancel Appointment",
+                    style: TextStyle(color: Colors.red)),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _cancelAppointment(String appointmentId) async {
+    try {
+      await _firestore.collection('appointments').doc(appointmentId).update({
+        'status': 'cancelled',
+      });
+
+      // Refresh appointments list
+      fetchUserAppointments();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Appointment cancelled successfully')),
+      );
+    } catch (e) {
+      print('Error cancelling appointment: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to cancel appointment')),
+      );
+    }
+  }
+
+  Widget _buildAppointmentsSection() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: 300,
+        margin: EdgeInsets.all(10),
+        decoration: BoxDecoration(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: Text(
+                "My Appointments →",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(
+              child: userAppointments.isEmpty
+                  ? Center(
+                      child: Text("You don't have any scheduled appointments"))
+                  : ListView.builder(
+                      itemCount: userAppointments.length,
+                      itemBuilder: (context, index) {
+                        var appointment = userAppointments[index];
+
+                        // Convert Firestore timestamp to DateTime
+                        DateTime appointmentDate =
+                            appointment['appointmentDate']?.toDate() ??
+                                DateTime.now();
+                        String formattedDate =
+                            "${appointmentDate.day}/${appointmentDate.month}/${appointmentDate.year}";
+                        String formattedTime =
+                            "${appointmentDate.hour}:${appointmentDate.minute.toString().padLeft(2, '0')}";
+
+                        return Container(
+                          margin:
+                              EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color.fromARGB(255, 39, 39, 39),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Color(0xFF2D5DA1),
+                              child: Icon(
+                                Icons.calendar_today,
+                                color: Colors.white,
+                              ),
+                            ),
+                            title: Text(
+                              appointment['tutorName'] ?? "Unknown Tutor",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Date: $formattedDate"),
+                                Text("Time: $formattedTime"),
+                                Text(
+                                    "Course: ${appointment['courseName'] ?? 'Not specified'}"),
+                              ],
+                            ),
+                            trailing: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: appointment['status'] == 'confirmed'
+                                    ? Colors.green.shade100
+                                    : appointment['status'] == 'pending'
+                                        ? Colors.orange.shade100
+                                        : Colors.red.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                appointment['status'] ?? "pending",
+                                style: TextStyle(
+                                  color: appointment['status'] == 'confirmed'
+                                      ? Colors.green.shade800
+                                      : appointment['status'] == 'pending'
+                                          ? Colors.orange.shade800
+                                          : Colors.red.shade800,
+                                ),
+                              ),
+                            ),
+                            onTap: () {
+                              _showAppointmentDetails(appointment);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -473,6 +690,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                 ),
                               ),
                             ),
+                            // Add the appointments section here
+                            _buildAppointmentsSection(),
                           ],
                         ),
                       ),
@@ -493,7 +712,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
           style: TextStyle(
             color: Color.fromARGB(255, 135, 61, 61),
             fontWeight: FontWeight.bold,
-            fontSize: 14, // More reasonable font size
+            fontSize: 14,
           ),
         ),
         icon: const Icon(Icons.border_color_outlined),
