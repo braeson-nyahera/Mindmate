@@ -6,6 +6,8 @@ import 'notifications.dart';
 import 'message_list.dart';
 import 'package:mindmate/users/authservice.dart';
 import 'dart:math';
+import 'package:intl/intl.dart';
+
 
 import 'package:mindmate/bottom_bar.dart';
 
@@ -33,6 +35,8 @@ class _MyHomePageState extends State<MyHomePage> {
     _getUserData();
     fetchEnrolledCourses();
   }
+
+  
 
   Future<void> fetchEnrolledCourses() async {
     setState(() {
@@ -71,6 +75,35 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }
   }
+
+ Future<Map<String, dynamic>?> _getLatestAppointment() async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null) return null;
+
+  try {
+    final DateTime now = DateTime.now();
+    
+    final QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('appointments')
+        .where('userId', isEqualTo: currentUser.uid) // Only fetch current user's appointments
+        .where('date', isGreaterThanOrEqualTo: DateFormat('yyyy-MM-dd').format(now)) // Filter future dates
+        .orderBy('date', descending: false) // Sort by earliest date first
+        .orderBy('timeSlot', descending: false) // Sort by time if same date
+        .limit(1) // Get the closest upcoming appointment
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+
+    return {
+      'id': snapshot.docs.first.id,
+      ...snapshot.docs.first.data() as Map<String, dynamic>,
+    };
+  } catch (e) {
+    print("Error fetching closest appointment: $e");
+    return null;
+  }
+}
+
 
   Future<void> _getUserData() async {
     _user = _auth.currentUser;
@@ -210,17 +243,103 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      SizedBox(height: 10),
 
                       // Featured Section Placeholder
-                      // ClipRRect(
-                      //   borderRadius: BorderRadius.circular(16),
-                      //   child: Container(
-                      //     height: 250,
-                      //     width: double.infinity,
-                      //     color: const Color.fromARGB(255, 184, 199, 226),
-                      //   ),
-                      // ),
+            ClipRRect(
+  borderRadius: BorderRadius.circular(6),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Title outside the container but inside ClipRRect
+      Padding(
+        padding: const EdgeInsets.only(left: 7, bottom: 7),
+        child: Text(
+          "Coming Appointment",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+
+      Container(
+        height: 80,
+        width: double.infinity,
+        // color: Colors.blue.shade100, // Light theme background
+        padding: const EdgeInsets.all(7),
+        child: FutureBuilder<Map<String, dynamic>?>(
+          future: _getLatestAppointment(), // Fetch upcoming appointment
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (!snapshot.hasData || snapshot.data == null) {
+              return const Center(child: Text("No upcoming appointments"));
+            }
+
+            final latest = snapshot.data!;
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left Column: Subject & Notes
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        latest['subject'] ?? "No subject",
+                        style: TextStyle(fontSize: 18,
+                       fontWeight: FontWeight.bold,),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        latest['notes'] ?? "No additional notes",
+                        style: TextStyle(fontSize: 16,
+            fontWeight: FontWeight.bold,),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 16), // Spacing between columns
+
+                // Right Column: Date & Time
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        latest['date'] ?? "No date",
+                        style: TextStyle(fontSize: 17),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        latest['timeSlot'] ?? "No time",
+                        style: TextStyle(fontSize: 15),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    ],
+  ),
+),
+
+                      
+
+                      // SizedBox(height: 10),
+
+
 
                       ClipRRect(
                         clipBehavior: Clip.none,
@@ -444,7 +563,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      SizedBox(height: 10),
 
                       // Recommended Courses Section (DYNAMIC FROM FIRESTORE)
                       ClipRRect(
