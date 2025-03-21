@@ -8,7 +8,6 @@ import 'package:mindmate/users/authservice.dart';
 import 'dart:math';
 
 import 'package:mindmate/bottom_bar.dart';
-import 'package:mindmate/course_detail.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -26,7 +25,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Map<String, dynamic>? _userData;
   bool _isLoading = true;
   Set<String> enrolledCourses = {};
-  bool isLoading=true;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -72,7 +71,6 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }
   }
-
 
   Future<void> _getUserData() async {
     _user = _auth.currentUser;
@@ -213,7 +211,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
 
                       SizedBox(height: 20),
-                      
 
                       // Featured Section Placeholder
                       // ClipRRect(
@@ -225,161 +222,227 @@ class _MyHomePageState extends State<MyHomePage> {
                       //   ),
                       // ),
 
-
-              ClipRRect(
-  clipBehavior: Clip.none, 
-  child: Container(
-    width: double.infinity,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.all(10),
-          child: Text(
-            "Your Courses →",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
-        SizedBox(
-          height: 200, // Adjusted height for the new design
-          child: enrolledCourses.isEmpty
-              ? Center(child: Text("You haven't enrolled in any courses yet"))
-              : StreamBuilder<QuerySnapshot>(
-                  stream: _firestore.collection('courses').snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    }
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return Center(child: Text("No courses available!"));
-                    }
-
-                    var allCourses = snapshot.data!.docs;
-                    var enrolledCourseDocs = allCourses
-                        .where((doc) => enrolledCourses.contains(doc.id))
-                        .toList();
-
-                    if (enrolledCourseDocs.isEmpty) {
-                      return Center(
-                          child: Text("You haven't enrolled in any courses yet"));
-                    }
-
-                    enrolledCourseDocs.shuffle(Random());
-
-                    PageController _pageController = PageController(viewportFraction: 1.0); 
-
-                    return SizedBox(
-                      width: double.infinity,
-                      child: PageView.builder(
-                        controller: _pageController,
-                        physics: PageScrollPhysics(),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: enrolledCourseDocs.length,
-                        itemBuilder: (context, index) {
-                          var data = enrolledCourseDocs[index].data() as Map<String, dynamic>;
-                          var courseId = enrolledCourseDocs[index].id;
-
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => CourseDetail(
-                                    courseId: courseId,
-                                    userId: _auth.currentUser!.uid,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: MediaQuery.of(context).size.width * 0.85, 
-                              height: 140,
-                              margin: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                          
-                                // border: Border.all(
-                                //   color: const Color.fromARGB(255, 39, 39, 39),
-                                //   width: 1,
-                                // ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black12,
-                                    blurRadius: 5,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(14.0),
-                                child: Row( // Changed from Column to Row
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(10),
-                                        bottomLeft: Radius.circular(10),
-                                      ),
-                                      child: data['imageUrl'] != null &&
-                                              data['imageUrl'].toString().isNotEmpty
-                                          ? Image.network(
-                                              data['imageUrl'],
-                                              width: 150, // Adjusted width for better fit
-                                              height: 140,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Image.asset(
-                                              'assets/images/mmBareLogo.png',
-                                              width: 150,
-                                              height: 140,
-                                              fit: BoxFit.fill,
-                                            ),
-                                    ),
-                                    Expanded(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(10),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              data['title'] ?? "No Title",
-                                              style: TextStyle(
-                                                fontSize: 22,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            SizedBox(height: 5), 
-                                            Text(
-                                              data['Author'] ?? "Unknown Author",
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                color: Colors.black87,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                      ClipRRect(
+                        clipBehavior: Clip.none,
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(10),
+                                child: Text(
+                                  "Your Courses →",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
-                            ),
-                          );
-                        },
+                              SizedBox(
+                                height:
+                                    200, // Adjusted height for the new design
+                                child: enrolledCourses.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                            "You haven't enrolled in any courses yet"))
+                                    : StreamBuilder<QuerySnapshot>(
+                                        stream: _firestore
+                                            .collection('courses')
+                                            .snapshots(),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return Center(
+                                                child:
+                                                    CircularProgressIndicator());
+                                          }
+                                          if (!snapshot.hasData ||
+                                              snapshot.data!.docs.isEmpty) {
+                                            return Center(
+                                                child: Text(
+                                                    "No courses available!"));
+                                          }
+
+                                          var allCourses = snapshot.data!.docs;
+                                          var enrolledCourseDocs = allCourses
+                                              .where((doc) => enrolledCourses
+                                                  .contains(doc.id))
+                                              .toList();
+
+                                          if (enrolledCourseDocs.isEmpty) {
+                                            return Center(
+                                                child: Text(
+                                                    "You haven't enrolled in any courses yet"));
+                                          }
+
+                                          enrolledCourseDocs.shuffle(Random());
+
+                                          PageController pageController =
+                                              PageController(
+                                                  viewportFraction: 1.0);
+
+                                          return SizedBox(
+                                            width: double.infinity,
+                                            child: PageView.builder(
+                                              controller: pageController,
+                                              physics: PageScrollPhysics(),
+                                              scrollDirection: Axis.horizontal,
+                                              itemCount:
+                                                  enrolledCourseDocs.length,
+                                              itemBuilder: (context, index) {
+                                                var data =
+                                                    enrolledCourseDocs[index]
+                                                            .data()
+                                                        as Map<String, dynamic>;
+                                                var courseId =
+                                                    enrolledCourseDocs[index]
+                                                        .id;
+
+                                                return GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            CourseDetail(
+                                                          courseId: courseId,
+                                                          userId: _auth
+                                                              .currentUser!.uid,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: Container(
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.85,
+                                                    height: 140,
+                                                    margin:
+                                                        EdgeInsets.symmetric(
+                                                            horizontal: 8,
+                                                            vertical: 10),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+
+                                                      // border: Border.all(
+                                                      //   color: const Color.fromARGB(255, 39, 39, 39),
+                                                      //   width: 1,
+                                                      // ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black12,
+                                                          blurRadius: 5,
+                                                          spreadRadius: 2,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              14.0),
+                                                      child: Row(
+                                                        // Changed from Column to Row
+                                                        children: [
+                                                          ClipRRect(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .only(
+                                                              topLeft: Radius
+                                                                  .circular(10),
+                                                              bottomLeft: Radius
+                                                                  .circular(10),
+                                                            ),
+                                                            child: data['imageUrl'] !=
+                                                                        null &&
+                                                                    data['imageUrl']
+                                                                        .toString()
+                                                                        .isNotEmpty
+                                                                ? Image.network(
+                                                                    data[
+                                                                        'imageUrl'],
+                                                                    width:
+                                                                        150, // Adjusted width for better fit
+                                                                    height: 140,
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                  )
+                                                                : Image.asset(
+                                                                    'assets/images/mmBareLogo.png',
+                                                                    width: 150,
+                                                                    height: 140,
+                                                                    fit: BoxFit
+                                                                        .fill,
+                                                                  ),
+                                                          ),
+                                                          Expanded(
+                                                            child: Padding(
+                                                              padding:
+                                                                  EdgeInsets
+                                                                      .all(10),
+                                                              child: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  Text(
+                                                                    data['title'] ??
+                                                                        "No Title",
+                                                                    style:
+                                                                        TextStyle(
+                                                                      fontSize:
+                                                                          22,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      color: Colors
+                                                                          .black,
+                                                                    ),
+                                                                    maxLines: 2,
+                                                                    overflow:
+                                                                        TextOverflow
+                                                                            .ellipsis,
+                                                                  ),
+                                                                  SizedBox(
+                                                                      height:
+                                                                          5),
+                                                                  Text(
+                                                                    data['Author'] ??
+                                                                        "Unknown Author",
+                                                                    style:
+                                                                        TextStyle(
+                                                                      fontSize:
+                                                                          18,
+                                                                      color: Colors
+                                                                          .black87,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          );
+                                        },
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    );
-                  },
-                ),
-        ),
-      ],
-    ),
-  ),
-),
-
 
                       SizedBox(height: 20),
 
