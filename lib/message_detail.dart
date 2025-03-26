@@ -188,43 +188,42 @@ class _MessageDetailState extends State<MessageDetail> {
                           data['Author_Id'];
 
                   return Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     child: Row(
-                      mainAxisAlignment: isAuthor
-                          ? MainAxisAlignment.end
-                          : MainAxisAlignment.start,
+                      mainAxisAlignment:
+                          isAuthor ? MainAxisAlignment.end : MainAxisAlignment.start,
                       children: [
-                        // Only show receiver avatar on receiver messages
-                        if (!isAuthor && isLastFromUser)
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundColor: Colors.green[100],
-                            child: Text(
-                              "?",
-                              style: TextStyle(color: Colors.green[800]),
+                        // Avatar for received messages (including invisible placeholders)
+                        if (!isAuthor)
+                          Opacity(
+                            opacity: isLastFromUser ? 1.0 : 0.0, // Show only for last message
+                            child: CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Colors.green[100],
+                              child: Text(
+                                "?",
+                                style: TextStyle(color: Colors.green[800]),
+                              ),
                             ),
                           ),
 
-                        if (!isAuthor) SizedBox(width: 8),
+                        if (!isAuthor) const SizedBox(width: 8),
 
                         // Chat Bubble
                         Container(
-                          padding: EdgeInsets.all(10),
-                          constraints: BoxConstraints(maxWidth: 250),
+                          padding: const EdgeInsets.all(10),
+                          constraints: const BoxConstraints(maxWidth: 250),
                           decoration: BoxDecoration(
-                            color: isAuthor
-                                ? Colors.blue[100]
-                                : const Color(0xFFE8E8E8),
+                            color: isAuthor ? Colors.blue[100] : const Color(0xFFE8E8E8),
                             borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(12),
-                              topRight: Radius.circular(12),
+                              topLeft: const Radius.circular(12),
+                              topRight: const Radius.circular(12),
                               bottomLeft: isAuthor
-                                  ? Radius.circular(12)
-                                  : Radius.circular(0),
+                                  ? const Radius.circular(12)
+                                  : const Radius.circular(0),
                               bottomRight: isAuthor
-                                  ? Radius.circular(0)
-                                  : Radius.circular(12),
+                                  ? const Radius.circular(0)
+                                  : const Radius.circular(12),
                             ),
                           ),
                           child: Column(
@@ -232,37 +231,40 @@ class _MessageDetailState extends State<MessageDetail> {
                             children: [
                               Text(
                                 messageContent,
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.black),
+                                style: const TextStyle(fontSize: 16, color: Colors.black),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
                                 createdAt,
-                                style: TextStyle(
-                                    fontSize: 10, color: Colors.grey[700]),
+                                style: TextStyle(fontSize: 10, color: Colors.grey[700]),
                               ),
                             ],
                           ),
                         ),
 
-                        if (isAuthor) SizedBox(width: 8),
+                        if (isAuthor) const SizedBox(width: 8),
 
-                        // Only show author avatar on author messages
-                        if (isAuthor && isLastFromUser)
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundColor: Colors.blue[100],
-                            child: Text(
-                              "Me",
-                              style: TextStyle(
-                                color: Colors.blue[800],
-                                fontSize: 10,
+                        // Avatar for sent messages (including invisible placeholders)
+                        if (isAuthor)
+                          Opacity(
+                            opacity: isLastFromUser ? 1.0 : 0.0, // Show only for last message
+                            child: CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Colors.blue[100],
+                              child: Text(
+                                "Me",
+                                style: TextStyle(
+                                  color: Colors.blue[800],
+                                  fontSize: 10,
+                                ),
                               ),
                             ),
                           ),
                       ],
                     ),
                   );
+
+                    
                 },
               );
             },
