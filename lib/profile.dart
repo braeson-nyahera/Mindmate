@@ -163,8 +163,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
         appointment['appointmentDate']?.toDate() ?? DateTime.now();
     String formattedDate =
         "${appointmentDate.day}/${appointmentDate.month}/${appointmentDate.year}";
-    String formattedTime =
-        "${appointmentDate.hour}:${appointmentDate.minute.toString().padLeft(2, '0')}";
+    // String formattedTime =
+    //     "${appointmentDate.hour}:${appointmentDate.minute.toString().padLeft(2, '0')}";
     final Future<QuerySnapshot<Map<String, dynamic>>> tutor = FirebaseFirestore
         .instance
         .collection('users')
@@ -182,6 +182,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                 content: Center(child: CircularProgressIndicator()),
               );
             }
+            final timeSlot = appointment['timeSlot'];
+            final date = appointment['date'];
 
             final tutorName = snapshot.hasData && snapshot.data!.docs.isNotEmpty
                 ? snapshot.data!.docs[0].data()['name'] ?? 'Unknown'
@@ -195,9 +197,9 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   children: [
                     Text("Tutor: ${tutorName ?? 'Unknown'}"),
                     SizedBox(height: 8),
-                    Text("Date: $formattedDate"),
+                    Text("Date: $date"),
                     SizedBox(height: 4),
-                    Text("Time: $appointment['timeSlot']"),
+                    Text("Time: $timeSlot"),
                     SizedBox(height: 8),
                     Text(
                         "Course: ${appointment['subject'] ?? 'Not specified'}"),
@@ -281,14 +283,15 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                         var appointment = userAppointments[index];
 
                         // Convert Firestore timestamp to DateTime
-                        DateTime appointmentDate =
-                            appointment['appointmentDate']?.toDate() ??
-                                DateTime.now();
-                        String formattedDate =
-                            "${appointmentDate.day}/${appointmentDate.month}/${appointmentDate.year}";
-                        String formattedTime =
-                            "${appointmentDate.hour}:${appointmentDate.minute.toString().padLeft(2, '0')}";
-
+                        // DateTime appointmentDate =
+                        //     appointment['appointmentDate']?.toDate() ??
+                        //         DateTime.now();
+                        // String formattedDate =
+                        //     "${appointmentDate.day}/${appointmentDate.month}/${appointmentDate.year}";
+                        // String formattedTime =
+                        //     "${appointmentDate.hour}:${appointmentDate.minute.toString().padLeft(2, '0')}";
+                        final date = appointment['date'];
+                        final time = appointment['timeSlot'];
                         return Container(
                           margin:
                               EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -317,8 +320,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("Date: $formattedDate"),
-                                Text(appointment['timeSlot']),
+                                Text("Date: $date"),
+                                Text("Time: $time"),
                                 Text(
                                     "Course: ${appointment['subject'] ?? 'Not specified'}"),
                               ],
