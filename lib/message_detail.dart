@@ -100,7 +100,7 @@ class _MessageDetailState extends State<MessageDetail> {
       await widget.messages.add({
         "message": message,
         "CreatedAt": FieldValue.serverTimestamp(),
-        "Author_Id": widget.authorId,
+        "Author_Id": FirebaseAuth.instance.currentUser!.uid,
         "Receiver_Id": widget.receiverId,
       });
 
@@ -177,6 +177,9 @@ class _MessageDetailState extends State<MessageDetail> {
                   bool isAuthor = currentUserId == data['Author_Id'];
                   String createdAt = _formatTimestamp(data['CreatedAt']);
                   String messageContent = data['message'] ?? "No content";
+
+                  print(
+                      "Message: ${data['message']}, isAuthor: $isAuthor, Author_Id: ${data['Author_Id']},Receiver_Id: ${data['Receiver_Id']}, currentUserId: $currentUserId");
 
                   // Check if the next message is from a different sender
                   bool isLastFromUser = index == messages.length - 1 ||
