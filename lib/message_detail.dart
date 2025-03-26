@@ -190,7 +190,7 @@ class _MessageDetailState extends State<MessageDetail> {
                       mainAxisAlignment:
                           isAuthor ? MainAxisAlignment.end : MainAxisAlignment.start,
                       children: [
-                        // Avatar for received messages (including invisible placeholders)
+                        
                         if (!isAuthor)
                           Opacity(
                             opacity: isLastFromUser ? 1.0 : 0.0, // Show only for last message
@@ -241,10 +241,10 @@ class _MessageDetailState extends State<MessageDetail> {
 
                         if (isAuthor) const SizedBox(width: 8),
 
-                        // Avatar for sent messages (including invisible placeholders)
+                        
                         if (isAuthor)
                           Opacity(
-                            opacity: isLastFromUser ? 1.0 : 0.0, // Show only for last message
+                            opacity: isLastFromUser ? 1.0 : 0.0, 
                             child: CircleAvatar(
                               radius: 16,
                               backgroundColor: Colors.blue[100],
