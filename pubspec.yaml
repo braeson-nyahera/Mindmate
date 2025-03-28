@@ -63,7 +63,7 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/holder.png"
+  image_path: "assets/images/appLogo.png"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -81,7 +81,8 @@ flutter:
     - assets/images/perfectlogo.png
     - assets/images/googleIcon.png
     - assets/images/name.png
-    - assets/images/holder.png
+    - assets/images/mmLogo.png
+    - assets/images/appLogo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

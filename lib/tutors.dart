@@ -4,6 +4,8 @@ import 'package:mindmate/top_bar.dart';
 import 'bottom_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mindmate/message_detail.dart';
+
 
 class TutorsWidget extends StatefulWidget {
   const TutorsWidget({super.key});
@@ -15,7 +17,7 @@ class TutorsWidget extends StatefulWidget {
 
 
 
-void _viewTutorPopup(BuildContext context, Map<String, dynamic> tutorData, String tutorName, String tutorId) {
+void _viewTutorPopup(BuildContext context, Map<String, dynamic> tutorData, String tutorName, ) {
 
   showDialog(
     
@@ -81,7 +83,7 @@ void _viewTutorPopup(BuildContext context, Map<String, dynamic> tutorData, Strin
                           // Tutor Name
                           Text(
                               tutorName.isNotEmpty ? tutorName : "Unknown Tutor",
-                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold,color: Color.fromARGB(255, 0, 0, 0)),
+                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold,color: Color(0xFF2D5DA1)),
                             ),
                           
                           const SizedBox(height: 10),
@@ -105,7 +107,7 @@ void _viewTutorPopup(BuildContext context, Map<String, dynamic> tutorData, Strin
                               ],
                             ),
                           ),
-
+                          
                           const SizedBox(height: 10),
 
                                                   // Subjects
@@ -152,6 +154,7 @@ void _viewTutorPopup(BuildContext context, Map<String, dynamic> tutorData, Strin
                               ],
                             ),
                           ),
+                          
                         ],
                       ),
                     ),
@@ -170,25 +173,30 @@ void _viewTutorPopup(BuildContext context, Map<String, dynamic> tutorData, Strin
                       const SizedBox(width: 10),
                       ElevatedButton(
                         onPressed: () {
-                          
+                          ElevatedButton.styleFrom(elevation: 0);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => TutorAppointmentForm()//selectedTutorId: tutorId,
+                              builder: (context) => MessageDetail(authorId: FirebaseAuth.instance.currentUser!.uid, receiverId: tutorData['userId'])//selectedTutorId: tutorId,
                             ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2D5DA1),
+                          //backgroundColor: const Color(0xFF2D5DA1),
+                          backgroundColor: const Color.fromARGB(0, 255, 255, 255),
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         ),
-                        child: const Text(
-                          "Chat",
-                          style: TextStyle(fontSize: 18,color: Color(0XFFFFFFFF), fontWeight: FontWeight.normal),
-                        ),
+                        child:
+                        // 
+                         const Icon(
+                            Icons.message, // Use the message icon
+                            color: Color(0xFF2D5DA1),size: 28, // Set icon color to white
+                            //  color: Color.fromARGB(255, 255, 255, 255),size: 28, // Set icon color to white
+                          ),
                       ),
                     ],
                   ),
@@ -248,10 +256,10 @@ class _TutorsWidgetState extends State<TutorsWidget> {
               ),
               itemCount: tutorsList.length,
               itemBuilder: (context, index) {
-                // var tutorData = tutorsList[index].data() as Map<String, dynamic>;
-                var tutorDoc = tutorsList[index]; // Get the full document
-                var tutorData = tutorDoc.data() as Map<String, dynamic>;
-                String tutorId = tutorDoc.id; // Extract document ID
+                 var tutorData = tutorsList[index].data() as Map<String, dynamic>;
+                // var tutorDoc = tutorsList[index]; // Get the full document
+                // var tutorData = tutorDoc.data() as Map<String, dynamic>;
+                // String tutorId = tutorDoc.id; // Extract document ID
 
 
                 // Fetch the tutor's name from the users collection
@@ -271,8 +279,8 @@ class _TutorsWidgetState extends State<TutorsWidget> {
 
                     return GestureDetector(
                       onTap: () {
-                          // _viewTutorPopup(context, tutorData, tutorName); // Pass tutorData and tutorName
-                           _viewTutorPopup(context, tutorData, tutorName, tutorId); // Pass tutorId too
+                          // _viewTutorPopup(context, tutorData, tutorName,tutorID); // Pass tutorData and tutorName
+                           _viewTutorPopup(context, tutorData, tutorName); 
                         },
 
                       child: Container(
