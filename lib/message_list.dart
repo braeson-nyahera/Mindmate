@@ -8,13 +8,16 @@ import 'package:rxdart/rxdart.dart';
 
 class MessageListScreen extends StatefulWidget {
   MessageListScreen({super.key});
+  
   final CollectionReference users =
       FirebaseFirestore.instance.collection('users');
 
   @override
   State<MessageListScreen> createState() => _MessageListScreenState();
+  
 }
 Future<int> _countUnreadMessages(String otherUserId, String userId) async {
+  
   QuerySnapshot unreadMessages = await FirebaseFirestore.instance
       .collection('messages')
       .where('Receiver_Id', isEqualTo: userId) // Pass userId dynamically
@@ -98,6 +101,7 @@ class ConversationStream {
 }
 
 class _MessageListScreenState extends State<MessageListScreen> {
+   int totalUnreadCount=0;
   final String user = FirebaseAuth.instance.currentUser!.uid;
   List<Map<String, dynamic>> users = [];
   String errorMessage = "";
@@ -144,8 +148,47 @@ class _MessageListScreenState extends State<MessageListScreen> {
   String searchQuery = "";
 
 
+Widget _buildFloatingActionButton(int totalUnreadCount) {
+  return Stack(
+    children: [
+      FloatingActionButton(
+        onPressed: () {
+          _showNewMessageDialog();
+        },
+        child: Icon(Icons.message),
+      ),
+      if (totalUnreadCount > 0)
+        Positioned(
+          right: 0,
+          child: Container(
+            padding: EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+            ),
+            constraints: BoxConstraints(
+              minWidth: 16,
+              minHeight: 16,
+            ),
+            child: Text(
+              '$totalUnreadCount',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+
 
  void _showNewMessageDialog() {
+  print("New message dialog opened!"); // Debug print
+  
   showDialog(
     context: context,
     builder: (context) {
@@ -433,6 +476,7 @@ List<Map<String, dynamic>> _filteredUsers() {
               }
 
               var conversations = snapshot.data!;
+             
 
               return ListView.builder(
                 itemCount: conversations.length,
@@ -462,86 +506,88 @@ List<Map<String, dynamic>> _filteredUsers() {
                       future: _countUnreadMessages(otherUserId, user),
                         builder: (context, unreadSnapshot) {
                           int unreadCount = unreadSnapshot.data ?? 0;
+                          totalUnreadCount += unreadCount;
 
                           return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                            child: ListTile(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => MessageDetail(
-                                      authorId: isAuthor ? user : otherUserId,
-                                      receiverId: isAuthor ? otherUserId : user,
-                                    ),
-                                  ),
-                                );
-                              },
-                              leading: Stack(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: Colors.blue[100],
-                                    child: Text(
-                                      userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-                                      style: TextStyle(color: Colors.blue[800]),
-                                    ),
-                                  ),
-                                  if (unreadCount > 0)
-                                    Positioned(
-                                      left: -5, // Move badge to far left
-                                      top: 10,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        constraints:
-                                            const BoxConstraints(minWidth: 24, minHeight: 24),
-                                        child: Text(
-                                          unreadCount.toString(),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              title: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      userName,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  Text(
-                                    formattedTime,
-                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                              subtitle: Row(
-                                children: [
-                                  isAuthor
-                                      ? const Icon(Icons.arrow_outward, size: 14, color: Colors.blue)
-                                      : const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      messageContent,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
+  margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+  child: ListTile(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MessageDetail(
+            authorId: isAuthor ? user : otherUserId,
+            receiverId: isAuthor ? otherUserId : user,
+          ),
+        ),
+      );
+    },
+    leading: Row(
+      mainAxisSize: MainAxisSize.min, // Keep size compact
+      children: [
+        if (unreadCount > 0)
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            constraints: const BoxConstraints(
+              minWidth: 24,
+              minHeight: 24,
+            ),
+            child: Text(
+              unreadCount.toString(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        const SizedBox(width: 6), // Space between badge and avatar
+        CircleAvatar(
+          backgroundColor: Colors.blue[100],
+          child: Text(
+            userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+            style: TextStyle(color: Colors.blue[800]),
+          ),
+        ),
+      ],
+    ),
+    title: Row(
+      children: [
+        Expanded(
+          child: Text(
+            userName,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        Text(
+          formattedTime,
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+      ],
+    ),
+    subtitle: Row(
+      children: [
+        isAuthor
+            ? const Icon(Icons.arrow_outward, size: 14, color: Colors.blue)
+            : const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            messageContent,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+      ],
+    ),
+  ),
+);
+
                         },
                       );
                     },
@@ -553,12 +599,13 @@ List<Map<String, dynamic>> _filteredUsers() {
           ),
         ),
       ]),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showNewMessageDialog();
-        },
-        child: Icon(Icons.message),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     _showNewMessageDialog();
+      //   },
+      //   child: Icon(Icons.message),
+      // ),
+      floatingActionButton: _buildFloatingActionButton(totalUnreadCount),
     );
   }
 }

@@ -173,6 +173,26 @@ class _TutorAppointmentFormState extends State<TutorAppointmentForm> {
         'createdAt': FieldValue.serverTimestamp()
       });
 
+      // Fetch the tutor's name for the notification message
+    final tutorDoc = await FirebaseFirestore.instance.collection('tutors').doc(_selectedTutor).get();
+    String tutorName = 'Unknown Tutor'; // Default in case tutor is not found
+    if (tutorDoc.exists) {
+      final tutorData = tutorDoc.data() as Map<String, dynamic>;
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(tutorData['userId']).get();
+      if(userDoc.exists){
+        tutorName = userDoc.data()!['name'] ?? 'Unknown Tutor';
+      }
+    }
+
+    // Create notification
+    await FirebaseFirestore.instance.collection('notifications').add({
+      'userId': currentUser.uid,
+      'message': 'Your appointment with $tutorName for ${_subjectController.text.trim()} on ${formattedDate} at $_selectedTimeSlot has been requested.',
+      'timestamp': Timestamp.now(),
+     
+    });
+      
+
       // Reset form and show success message
       setState(() {
         _subjectController.clear();

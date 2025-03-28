@@ -55,15 +55,17 @@ class _ForumsWidgetState extends State<ForumsWidget> {
                 SizedBox(height: 12),
                 TextField(
                   controller: _questionController,
+                   style: const TextStyle(fontSize: 18), 
                   decoration: InputDecoration(
                     hintText: "Enter your question...",
+                    hintStyle: const TextStyle(fontSize: 17),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                     filled: true,
                     fillColor: Colors.grey[100],
                   ),
-                  maxLines: 3,
+                  maxLines: 5,
                 ),
                 SizedBox(height: 20),
                 Row(
@@ -73,7 +75,7 @@ class _ForumsWidgetState extends State<ForumsWidget> {
                       onPressed: () => Navigator.pop(context),
                       child: Text(
                         "Cancel",
-                        style: TextStyle(color: Colors.grey[700]),
+                        style: TextStyle(fontSize: 18,color: const Color.fromARGB(255, 254, 0, 0), fontWeight: FontWeight.normal),
                       ),
                     ),
                     SizedBox(width: 10),
@@ -86,7 +88,9 @@ class _ForumsWidgetState extends State<ForumsWidget> {
                         ),
                         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
-                      child: Text("Post",style: TextStyle(color: Color(0XFFFFFFFF)),),
+                      child: Text("Post",style: TextStyle(
+                        fontSize: 18, color: Color.fromARGB(255, 255, 255, 255), fontWeight: FontWeight.normal,
+                      ),),
                     ),
                   ],
                 ),

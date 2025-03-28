@@ -14,6 +14,7 @@ import 'package:mindmate/users/signup_screen.dart';
 import 'package:mindmate/message_list.dart';
 import 'home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mindmate/tutor_details.dart';
 
 
 void main() async {
@@ -29,6 +30,8 @@ void main() async {
   runApp(const MyApp());
 }
 class AuthCheck extends StatelessWidget {
+  const AuthCheck({super.key});
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -74,6 +77,7 @@ class MyApp extends StatelessWidget {
         '/landing_page': (context) => LandingWidget(),
         '/chats': (context) => ChatsWidget(),
         '/message_details': (context) => MessageListScreen(),
+        '/tutor_details': (context) => TutorDetails(),
       },
     );
   }

@@ -41,6 +41,7 @@ class MessageStream {
 class _MessageDetailState extends State<MessageDetail> {
   final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   // Cache for user data to avoid redundant fetches
   final Map<String, Future<DocumentSnapshot>> _userCache = {};
@@ -48,6 +49,14 @@ class _MessageDetailState extends State<MessageDetail> {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+   void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(_scrollController.position.minScrollExtent);
+    }
   }
 
   // Fetch user details from Firestore
@@ -105,6 +114,10 @@ class _MessageDetailState extends State<MessageDetail> {
       });
 
       _messageController.clear();
+
+      Future.delayed(Duration(milliseconds: 100), () {
+        _scrollToBottom();
+      });
     }
   }
 
@@ -134,9 +147,12 @@ class _MessageDetailState extends State<MessageDetail> {
   }
 
   @override
-  Widget build(BuildContext context) {
+ 
+   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+     appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        elevation: 0.0,
         title: FutureBuilder<DocumentSnapshot>(
           future: _getUserDetails(widget.authorId == currentUserId
               ? widget.receiverId
@@ -145,161 +161,163 @@ class _MessageDetailState extends State<MessageDetail> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Text("Loading...");
             }
+            if (!snapshot.hasData || snapshot.data == null) {
+              return Text("Unknown User");
+            }
 
             String userName = _extractUserName(snapshot.data);
-            return Text(userName);
+
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.blue[100],
+                  child: Icon(Icons.person, color: Colors.blue[700]),
+                ),
+                SizedBox(width: 8), 
+                Text(userName, style: TextStyle(color: Colors.black)),
+              ],
+            );
           },
         ),
       ),
-      body: Column(children: [
-        // Messages section
-        Expanded(
-          child: StreamBuilder<List<QueryDocumentSnapshot>>(
-            stream:
-                MessageStream.getMessages(widget.authorId, widget.receiverId),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
 
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(
-                  child: Text("No messages found"),
-                );
-              }
+      body: Column(
+        children: [
+          Expanded(
+            child: StreamBuilder<List<QueryDocumentSnapshot>>(
+              stream: MessageStream.getMessages(widget.authorId, widget.receiverId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              var messages = snapshot.data!;
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text("No messages found"));
+                }
 
-              return ListView.builder(
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  var data = messages[index].data() as Map<String, dynamic>;
-                  bool isAuthor = currentUserId == data['Author_Id'];
-                  String createdAt = _formatTimestamp(data['CreatedAt']);
-                  String messageContent = data['message'] ?? "No content";
+                var messages = snapshot.data!;
+                messages = messages.reversed.toList(); // Reverse the messages list
 
-                  print(
-                      "Message: ${data['message']}, isAuthor: $isAuthor, Author_Id: ${data['Author_Id']},Receiver_Id: ${data['Receiver_Id']}, currentUserId: $currentUserId");
-
-                  // Check if the next message is from a different sender
-                  bool isLastFromUser = index == messages.length - 1 ||
-                      (messages[index + 1].data()
-                              as Map<String, dynamic>)['Author_Id'] !=
-                          data['Author_Id'];
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    child: Row(
-                      mainAxisAlignment:
-                          isAuthor ? MainAxisAlignment.end : MainAxisAlignment.start,
-                      children: [
-                        
-                        if (!isAuthor)
-                          Opacity(
-                            opacity: isLastFromUser ? 1.0 : 0.0, // Show only for last message
-                            child: CircleAvatar(
-                              radius: 16,
-                              backgroundColor: Colors.green[100],
-                              child: Text(
-                                "?",
-                                style: TextStyle(color: Colors.green[800]),
-                              ),
-                            ),
-                          ),
-
-                        if (!isAuthor) const SizedBox(width: 8),
-
-                        // Chat Bubble
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          constraints: const BoxConstraints(maxWidth: 250),
-                          decoration: BoxDecoration(
-                            color: isAuthor ? Colors.blue[100] : const Color(0xFFE8E8E8),
-                            borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(12),
-                              topRight: const Radius.circular(12),
-                              bottomLeft: isAuthor
-                                  ? const Radius.circular(12)
-                                  : const Radius.circular(0),
-                              bottomRight: isAuthor
-                                  ? const Radius.circular(0)
-                                  : const Radius.circular(12),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                messageContent,
-                                style: const TextStyle(fontSize: 16, color: Colors.black),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                createdAt,
-                                style: TextStyle(fontSize: 10, color: Colors.grey[700]),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        if (isAuthor) const SizedBox(width: 8),
-
-                        
-                        if (isAuthor)
-                          Opacity(
-                            opacity: isLastFromUser ? 1.0 : 0.0, 
-                            child: CircleAvatar(
-                              radius: 16,
-                              backgroundColor: Colors.blue[100],
-                              child: Text(
-                                "Me",
-                                style: TextStyle(
-                                  color: Colors.blue[800],
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-
+                return ListView.builder(
+                  controller: _scrollController, 
+                  reverse: true, // Make the list start from the bottom
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    var data = messages[index].data() as Map<String, dynamic>;
+                    bool isAuthor = currentUserId == data['Author_Id'];
+                    String createdAt = _formatTimestamp(data['CreatedAt']);
+                    String messageContent = data['message'] ?? "No content";
                     
-                },
-              );
-            },
+      //               bool isLastFromUser = index == messages.length - 1 ||
+      // (messages[index + 1].data() as Map<String, dynamic>)['Author_Id'] != data['Author_Id'];
+
+ bool isLastFromUser = index == 0 ||  // First item in reversed list (latest message)
+      (messages[index - 1].data() as Map<String, dynamic>)['Author_Id'] != data['Author_Id'];
+
+                    return Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+  child: Row(
+    mainAxisAlignment: isAuthor ? MainAxisAlignment.end : MainAxisAlignment.start,
+    children: [
+      // Receiver avatar (only visible if it's the last message from that user)
+      Opacity(
+        opacity: !isAuthor && isLastFromUser ? 1.0 : 0.0,
+        child: CircleAvatar(
+          radius: 16,
+          backgroundColor: Colors.green[100],
+          child: Text(
+            "?",
+            style: TextStyle(color: Colors.green[800]),
           ),
         ),
+      ),
+      if (!isAuthor) SizedBox(width: 8),
 
-        // Message input field
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _messageController,
-                  decoration: InputDecoration(
-                    hintText: "Type a message",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+      // Chat Bubble
+      Container(
+        padding: EdgeInsets.all(10),
+        constraints: BoxConstraints(maxWidth: 250),
+        decoration: BoxDecoration(
+          color: isAuthor ? Colors.blue[100] : const Color(0xFFE8E8E8),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(12),
+            topRight: Radius.circular(12),
+            bottomLeft: isAuthor ? Radius.circular(12) : Radius.circular(0),
+            bottomRight: isAuthor ? Radius.circular(0) : Radius.circular(12),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              messageContent,
+              style: TextStyle(fontSize: 16, color: Colors.black),
+            ),
+            SizedBox(height: 4),
+            Text(
+              createdAt,
+              style: TextStyle(fontSize: 10, color: Colors.grey[700]),
+            ),
+          ],
+        ),
+      ),
+
+      if (isAuthor) SizedBox(width: 8),
+
+      // Author avatar (only visible if it's the last message from the author)
+      Opacity(
+        opacity: isAuthor && isLastFromUser ? 1.0 : 0.0,
+        child: CircleAvatar(
+          radius: 16,
+          backgroundColor: Colors.blue[100],
+          child: Text(
+            "Me",
+            style: TextStyle(
+              color: Colors.blue[800],
+              fontSize: 10,
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
+);
+
+                  },
+                );
+              },
+            ),
+          ),
+
+          // Message input field
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: "Type a message",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                 ),
-              ),
-              SizedBox(width: 8),
-              IconButton(
-                icon: Icon(Icons.send),
-                onPressed: () {
-                  _sendMessage();
-                },
-              ),
-            ],
+                SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: _sendMessage,
+                ),
+              ],
+            ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
+

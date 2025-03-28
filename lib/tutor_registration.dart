@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
+import 'package:mindmate/profile.dart';
+
 class TutorRegistrationForm extends StatefulWidget {
   const TutorRegistrationForm({super.key});
 
@@ -446,7 +448,11 @@ class _TutorRegistrationFormState extends State<TutorRegistrationForm> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  // Navigator.of(context).pop();
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ProfileWidget()),
+                    );
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
@@ -457,7 +463,7 @@ class _TutorRegistrationFormState extends State<TutorRegistrationForm> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Go to Dashboard'),
+                child: const Text('Go to Profile'),
               ),
             ],
           ),
