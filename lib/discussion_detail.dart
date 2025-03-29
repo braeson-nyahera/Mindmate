@@ -200,86 +200,79 @@ class _DiscussionDetailState extends State<DiscussionDetail> {
 
 
                     // Comments section
-                    Expanded(
+                   Expanded(
                       child: StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('comments')
-                              .where('discussion_id',
-                                  isEqualTo: widget.discussionId)
-                              .orderBy('createdAt', descending: true)
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                    ConnectionState.waiting &&
-                                comments.isEmpty) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
-                            }
+                        stream: FirebaseFirestore.instance
+                            .collection('comments')
+                            .where('discussion_id', isEqualTo: widget.discussionId)
+                            .orderBy('createdAt', descending: true)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting && comments.isEmpty) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
 
-                            if (!snapshot.hasData ||
-                                snapshot.data!.docs.isEmpty) {
-                              return const Center(
-                                  child: Text("No comments yet!"));
-                            }
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                            return const Center(child: Text("No comments yet!"));
+                          }
 
-                            var docs = snapshot.data!.docs;
+                          var docs = snapshot.data!.docs;
 
-                            return ListView.builder(
-                              itemCount: docs.length,
-                              itemBuilder: (context, index) {
-                                var data =
-                                    docs[index].data() as Map<String, dynamic>;
+                          return ListView.builder(
+                            itemCount: docs.length,
+                            itemBuilder: (context, index) {
+                              var data = docs[index].data() as Map<String, dynamic>;
 
-                                return FutureBuilder<DocumentSnapshot>(
-                                  future: FirebaseFirestore.instance
-                                      .collection('users')
-                                      .doc(data['Author'])
-                                      .get(),
-                                  builder: (context, userSnapshot) {
-                                    String userName = "Loading...";
+                              return FutureBuilder<DocumentSnapshot>(
+                                future: FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(data['Author'])
+                                    .get(),
+                                builder: (context, userSnapshot) {
+                                  String userName = "Loading...";
+                                  String timeString = "";
 
-                                    if (userSnapshot.connectionState ==
-                                        ConnectionState.done) {
-                                      userName =
-                                          _extractUserName(userSnapshot.data);
-                                    }
+                                  if (userSnapshot.connectionState == ConnectionState.done) {
+                                    userName = _extractUserName(userSnapshot.data);
+                                  }
 
-                                    Timestamp? timestamp =
-                                        data['createdAt'] as Timestamp?;
-                                    String timeString =
-                                        _formatTimestamp(timestamp);
+                                  Timestamp? timestamp = data['createdAt'] as Timestamp?;
+                                  timeString = _formatTimestamp(timestamp);
 
-                                    return Card(
-                                      margin: const EdgeInsets.symmetric(
-                                          vertical: 4, horizontal: 8),
-                                      child: ListTile(
-                                        title: Text(
-                                          userName,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
+                                  return Card(
+                                    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                    child: ListTile(
+                                      title: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            userName,
+                                            style: const TextStyle(fontSize: 14, color: Color.fromARGB(255, 79, 79, 79)),
                                           ),
-                                        ),
-                                        subtitle: SizedBox(
-                                          width: double.infinity,
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              Text(data['comment'] ??
-                                                  'No comment'),
-                                              Text(timeString),
-                                            ],
+                                          Text(
+                                            timeString,
+                                            style: const TextStyle(fontSize: 12, color: Color.fromARGB(255, 79, 79, 79)),
                                           ),
+                                        ],
+                                      ),
+                                      subtitle: Padding(
+                                        padding: const EdgeInsets.only(top: 4), 
+                                        child: Text(
+                                          data['comment'] ?? 'No comment' ,
+                                          textAlign: TextAlign.left, style: TextStyle(fontSize: 15,color: const Color.fromARGB(255, 0, 0, 0)),
+                                          
                                         ),
                                       ),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          }),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ),
+
                     // Comment input field
                     Padding(
                       padding: const EdgeInsets.all(8.0),

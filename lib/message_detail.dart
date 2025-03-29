@@ -53,7 +53,7 @@ class _MessageDetailState extends State<MessageDetail> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
-   void _scrollToBottom() {
+  void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(_scrollController.position.minScrollExtent);
     }
@@ -110,7 +110,9 @@ class _MessageDetailState extends State<MessageDetail> {
         "message": message,
         "CreatedAt": FieldValue.serverTimestamp(),
         "Author_Id": FirebaseAuth.instance.currentUser!.uid,
-        "Receiver_Id": widget.authorId,
+        "Receiver_Id": widget.authorId == FirebaseAuth.instance.currentUser!.uid
+            ? widget.receiverId
+            : widget.authorId,
       });
 
       _messageController.clear();
@@ -147,10 +149,9 @@ class _MessageDetailState extends State<MessageDetail> {
   }
 
   @override
- 
-   Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
-     appBar: AppBar(
+      appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         elevation: 0.0,
         title: FutureBuilder<DocumentSnapshot>(
@@ -174,19 +175,19 @@ class _MessageDetailState extends State<MessageDetail> {
                   backgroundColor: Colors.blue[100],
                   child: Icon(Icons.person, color: Colors.blue[700]),
                 ),
-                SizedBox(width: 8), 
+                SizedBox(width: 8),
                 Text(userName, style: TextStyle(color: Colors.black)),
               ],
             );
           },
         ),
       ),
-
       body: Column(
         children: [
           Expanded(
             child: StreamBuilder<List<QueryDocumentSnapshot>>(
-              stream: MessageStream.getMessages(widget.authorId, widget.receiverId),
+              stream:
+                  MessageStream.getMessages(widget.authorId, widget.receiverId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -197,10 +198,11 @@ class _MessageDetailState extends State<MessageDetail> {
                 }
 
                 var messages = snapshot.data!;
-                messages = messages.reversed.toList(); // Reverse the messages list
+                messages =
+                    messages.reversed.toList(); // Reverse the messages list
 
                 return ListView.builder(
-                  controller: _scrollController, 
+                  controller: _scrollController,
                   reverse: true, // Make the list start from the bottom
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
@@ -208,82 +210,95 @@ class _MessageDetailState extends State<MessageDetail> {
                     bool isAuthor = currentUserId == data['Author_Id'];
                     String createdAt = _formatTimestamp(data['CreatedAt']);
                     String messageContent = data['message'] ?? "No content";
-                    
-      //               bool isLastFromUser = index == messages.length - 1 ||
-      // (messages[index + 1].data() as Map<String, dynamic>)['Author_Id'] != data['Author_Id'];
 
- bool isLastFromUser = index == 0 ||  // First item in reversed list (latest message)
-      (messages[index - 1].data() as Map<String, dynamic>)['Author_Id'] != data['Author_Id'];
+                    //               bool isLastFromUser = index == messages.length - 1 ||
+                    // (messages[index + 1].data() as Map<String, dynamic>)['Author_Id'] != data['Author_Id'];
+
+                    bool isLastFromUser = index ==
+                            0 || // First item in reversed list (latest message)
+                        (messages[index - 1].data()
+                                as Map<String, dynamic>)['Author_Id'] !=
+                            data['Author_Id'];
 
                     return Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-  child: Row(
-    mainAxisAlignment: isAuthor ? MainAxisAlignment.end : MainAxisAlignment.start,
-    children: [
-      // Receiver avatar (only visible if it's the last message from that user)
-      Opacity(
-        opacity: !isAuthor && isLastFromUser ? 1.0 : 0.0,
-        child: CircleAvatar(
-          radius: 16,
-          backgroundColor: Colors.green[100],
-          child: Text(
-            "?",
-            style: TextStyle(color: Colors.green[800]),
-          ),
-        ),
-      ),
-      if (!isAuthor) SizedBox(width: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      child: Row(
+                        mainAxisAlignment: isAuthor
+                            ? MainAxisAlignment.end
+                            : MainAxisAlignment.start,
+                        children: [
+                          // Receiver avatar (only visible if it's the last message from that user)
+                          Opacity(
+                            opacity: !isAuthor && isLastFromUser ? 1.0 : 0.0,
+                            child: CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Colors.green[100],
+                              child: Text(
+                                "?",
+                                style: TextStyle(color: Colors.green[800]),
+                              ),
+                            ),
+                          ),
+                          if (!isAuthor) SizedBox(width: 8),
 
-      // Chat Bubble
-      Container(
-        padding: EdgeInsets.all(10),
-        constraints: BoxConstraints(maxWidth: 250),
-        decoration: BoxDecoration(
-          color: isAuthor ? Colors.blue[100] : const Color(0xFFE8E8E8),
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(12),
-            topRight: Radius.circular(12),
-            bottomLeft: isAuthor ? Radius.circular(12) : Radius.circular(0),
-            bottomRight: isAuthor ? Radius.circular(0) : Radius.circular(12),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              messageContent,
-              style: TextStyle(fontSize: 16, color: Colors.black),
-            ),
-            SizedBox(height: 4),
-            Text(
-              createdAt,
-              style: TextStyle(fontSize: 10, color: Colors.grey[700]),
-            ),
-          ],
-        ),
-      ),
+                          // Chat Bubble
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            constraints: BoxConstraints(maxWidth: 250),
+                            decoration: BoxDecoration(
+                              color: isAuthor
+                                  ? Colors.blue[100]
+                                  : const Color(0xFFE8E8E8),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                topRight: Radius.circular(12),
+                                bottomLeft: isAuthor
+                                    ? Radius.circular(12)
+                                    : Radius.circular(0),
+                                bottomRight: isAuthor
+                                    ? Radius.circular(0)
+                                    : Radius.circular(12),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  messageContent,
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.black),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  createdAt,
+                                  style: TextStyle(
+                                      fontSize: 10, color: Colors.grey[700]),
+                                ),
+                              ],
+                            ),
+                          ),
 
-      if (isAuthor) SizedBox(width: 8),
+                          if (isAuthor) SizedBox(width: 8),
 
-      // Author avatar (only visible if it's the last message from the author)
-      Opacity(
-        opacity: isAuthor && isLastFromUser ? 1.0 : 0.0,
-        child: CircleAvatar(
-          radius: 16,
-          backgroundColor: Colors.blue[100],
-          child: Text(
-            "Me",
-            style: TextStyle(
-              color: Colors.blue[800],
-              fontSize: 10,
-            ),
-          ),
-        ),
-      ),
-    ],
-  ),
-);
-
+                          // Author avatar (only visible if it's the last message from the author)
+                          Opacity(
+                            opacity: isAuthor && isLastFromUser ? 1.0 : 0.0,
+                            child: CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Colors.blue[100],
+                              child: Text(
+                                "Me",
+                                style: TextStyle(
+                                  color: Colors.blue[800],
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   },
                 );
               },
@@ -303,7 +318,8 @@ class _MessageDetailState extends State<MessageDetail> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     ),
                   ),
                 ),
@@ -320,4 +336,3 @@ class _MessageDetailState extends State<MessageDetail> {
     );
   }
 }
-

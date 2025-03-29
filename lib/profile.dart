@@ -125,85 +125,84 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     }
   }
 
+  Future<void> fetchUserAppointments() async {
+    setState(() {
+      isLoading = true;
+    });
 
+    try {
+      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final now = DateTime.now(); // Current date and time
 
+      // Query all appointments for this user, ordered by date in descending order
+      final QuerySnapshot appointmentsSnapshot = await FirebaseFirestore
+          .instance
+          .collection('appointments')
+          .where('userId', isEqualTo: userId)
+          .orderBy('date', descending: true)
+          .get();
 
+      List<Map<String, dynamic>> filteredAppointments = [];
 
-Future<void> fetchUserAppointments() async {
-  setState(() {
-    isLoading = true;
-  });
+      for (var doc in appointmentsSnapshot.docs) {
+        final appointmentData = doc.data() as Map<String, dynamic>;
+        final appointmentDate =
+            DateFormat('yyyy-MM-dd').parse(appointmentData['date']);
+        final appointmentTimeSlot = appointmentData['timeSlot'];
 
-  try {
-    final userId = FirebaseAuth.instance.currentUser!.uid;
-    final now = DateTime.now(); // Current date and time
+        // Combine date and time to create a full DateTime for comparison
+        DateTime appointmentDateTime;
 
-    // Query all appointments for this user, ordered by date in descending order
-    final QuerySnapshot appointmentsSnapshot = await FirebaseFirestore.instance
-        .collection('appointments')
-        .where('userId', isEqualTo: userId)
-        .orderBy('date', descending: true)
-        .get();
+        // Parse the time slot and create a full DateTime object
+        try {
+          final timeFormat = DateFormat('HH:mm'); // Adjust format as needed
+          final parsedTime = timeFormat.parse(appointmentTimeSlot);
+          appointmentDateTime = DateTime(
+            appointmentDate.year,
+            appointmentDate.month,
+            appointmentDate.day,
+            parsedTime.hour,
+            parsedTime.minute,
+          );
+        } catch (e) {
+          print('Error parsing time slot: $e');
+          // If time parsing fails, exclude the appointment (or handle differently)
+          continue;
+        }
 
-    List<Map<String, dynamic>> filteredAppointments = [];
-
-    for (var doc in appointmentsSnapshot.docs) {
-      final appointmentData = doc.data() as Map<String, dynamic>;
-      final appointmentDate = DateFormat('yyyy-MM-dd').parse(appointmentData['date']);
-      final appointmentTimeSlot = appointmentData['timeSlot'];
-
-      // Combine date and time to create a full DateTime for comparison
-      DateTime appointmentDateTime;
-
-      // Parse the time slot and create a full DateTime object
-      try {
-        final timeFormat = DateFormat('HH:mm'); // Adjust format as needed
-        final parsedTime = timeFormat.parse(appointmentTimeSlot);
-        appointmentDateTime = DateTime(
-          appointmentDate.year,
-          appointmentDate.month,
-          appointmentDate.day,
-          parsedTime.hour,
-          parsedTime.minute,
-        );
-      } catch (e) {
-        print('Error parsing time slot: $e');
-        // If time parsing fails, exclude the appointment (or handle differently)
-        continue;
+        // Check if the appointment is in the future
+        if (appointmentDateTime.isAfter(now)) {
+          filteredAppointments.add({
+            'id': doc.id,
+            ...appointmentData,
+            'appointmentDateTime': appointmentDateTime, // Add for sorting
+          });
+        }
       }
 
-      // Check if the appointment is in the future
-      if (appointmentDateTime.isAfter(now)) {
-        filteredAppointments.add({
-          'id': doc.id,
-          ...appointmentData,
-          'appointmentDateTime': appointmentDateTime, // Add for sorting
-        });
+      // Sort the filtered appointments by appointmentDateTime in ascending order
+      filteredAppointments.sort((a, b) => (a['appointmentDateTime'] as DateTime)
+          .compareTo(b['appointmentDateTime'] as DateTime));
+
+      // Remove the appointmentDateTime field after sorting (if not needed)
+      for (var appointment in filteredAppointments) {
+        appointment.remove('appointmentDateTime');
       }
+
+      setState(() {
+        userAppointments = filteredAppointments;
+        isLoading = false;
+      });
+
+      print('User appointments: $userAppointments'); // Debug print
+    } catch (e) {
+      print('Error fetching user appointments: $e');
+      setState(() {
+        isLoading = false;
+      });
     }
-
-    // Sort the filtered appointments by appointmentDateTime in ascending order
-    filteredAppointments.sort((a, b) =>
-        (a['appointmentDateTime'] as DateTime).compareTo(b['appointmentDateTime'] as DateTime));
-
-    // Remove the appointmentDateTime field after sorting (if not needed)
-    filteredAppointments.forEach((appointment) {
-      appointment.remove('appointmentDateTime');
-    });
-
-    setState(() {
-      userAppointments = filteredAppointments;
-      isLoading = false;
-    });
-
-    print('User appointments: $userAppointments'); // Debug print
-  } catch (e) {
-    print('Error fetching user appointments: $e');
-    setState(() {
-      isLoading = false;
-    });
   }
-}
+
   void _showAppointmentDetails(Map<String, dynamic> appointment) {
     DateTime appointmentDate =
         appointment['appointmentDate']?.toDate() ?? DateTime.now();
@@ -283,62 +282,60 @@ Future<void> fetchUserAppointments() async {
   }
 
   Future<void> _cancelAppointment(String appointmentId) async {
-  try {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) throw Exception("User not authenticated");
+    try {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) throw Exception("User not authenticated");
 
-    // Fetch appointment details
-    final appointmentDoc = await FirebaseFirestore.instance
-        .collection('appointments')
-        .doc(appointmentId)
-        .get();
-
-    if (!appointmentDoc.exists) throw Exception("Appointment not found");
-
-    final appointmentData = appointmentDoc.data() as Map<String, dynamic>;
-
-    // Get tutor info
-    final tutorDoc = await FirebaseFirestore.instance
-        .collection('tutors')
-        .doc(appointmentData['tutorId'])
-        .get();
-
-    String tutorName = "Unknown Tutor";
-    if (tutorDoc.exists) {
-      final tutorData = tutorDoc.data() as Map<String, dynamic>;
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(tutorData['userId'])
+      // Fetch appointment details
+      final appointmentDoc = await FirebaseFirestore.instance
+          .collection('appointments')
+          .doc(appointmentId)
           .get();
-      if (userDoc.exists) {
-        tutorName = userDoc.data()?['name'] ?? "Unknown Tutor";
+
+      if (!appointmentDoc.exists) throw Exception("Appointment not found");
+
+      final appointmentData = appointmentDoc.data() as Map<String, dynamic>;
+
+      // Get tutor info
+      final tutorDoc = await FirebaseFirestore.instance
+          .collection('tutors')
+          .doc(appointmentData['tutorId'])
+          .get();
+
+      String tutorName = "Unknown Tutor";
+      if (tutorDoc.exists) {
+        final tutorData = tutorDoc.data() as Map<String, dynamic>;
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(tutorData['userId'])
+            .get();
+        if (userDoc.exists) {
+          tutorName = userDoc.data()?['name'] ?? "Unknown Tutor";
+        }
       }
+
+      // Update appointment status to "cancelled"
+      await FirebaseFirestore.instance
+          .collection('appointments')
+          .doc(appointmentId)
+          .update({'status': 'cancelled'});
+
+      // Create a cancellation notification
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': userId,
+        'message':
+            "Your appointment with $tutorName on ${appointmentData['date']} at ${appointmentData['timeSlot']} has been cancelled.",
+        'timestamp': Timestamp.now(),
+      });
+
+      // Refresh the appointment list
+      fetchUserAppointments();
+
+      print("Appointment successfully cancelled.");
+    } catch (e) {
+      print("Error cancelling appointment: $e");
     }
-
-    // Update appointment status to "cancelled"
-    await FirebaseFirestore.instance
-        .collection('appointments')
-        .doc(appointmentId)
-        .update({'status': 'cancelled'});
-
-    // Create a cancellation notification
-    await FirebaseFirestore.instance.collection('notifications').add({
-      'userId': userId,
-      'message':
-          "Your appointment with $tutorName on ${appointmentData['date']} at ${appointmentData['timeSlot']} has been cancelled.",
-      'timestamp': Timestamp.now(),
-    });
-
-    // Refresh the appointment list
-    fetchUserAppointments();
-
-    print("Appointment successfully cancelled.");
-  } catch (e) {
-    print("Error cancelling appointment: $e");
   }
-}
-
-  
 
   Widget _buildAppointmentsSection() {
     return ClipRRect(
@@ -346,9 +343,7 @@ Future<void> fetchUserAppointments() async {
       child: Container(
         height: 277,
         margin: EdgeInsets.all(1),
-        decoration: BoxDecoration(
-          
-        ),
+        decoration: BoxDecoration(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -472,7 +467,6 @@ Future<void> fetchUserAppointments() async {
               : SingleChildScrollView(
                   child: Column(
                     children: [
-                   
                       ClipRRect(
                               borderRadius: BorderRadius.circular(0),
                               child: Container(
@@ -561,7 +555,6 @@ Future<void> fetchUserAppointments() async {
                           shrinkWrap: true,
                           physics: NeverScrollableScrollPhysics(),
                           children: [
-                            
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16),
                               child: Container(
@@ -809,58 +802,57 @@ Future<void> fetchUserAppointments() async {
       //   ),
       //   icon: const Icon(Icons.border_color_outlined),
       // ),
-     floatingActionButton: FutureBuilder(
-  future: FirebaseFirestore.instance
-      .collection('tutors')
-      .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-      .get(),
-  builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) {
-      return const FloatingActionButton.extended(
-        onPressed: null,
-        label: Text("Loading..."),
-        icon: Icon(Icons.hourglass_empty),
-      );
-    }
+      floatingActionButton: FutureBuilder(
+        future: FirebaseFirestore.instance
+            .collection('tutors')
+            .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+            .get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const FloatingActionButton.extended(
+              onPressed: null,
+              label: Text("Loading..."),
+              icon: Icon(Icons.hourglass_empty),
+            );
+          }
 
-    bool isTutor = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+          bool isTutor = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
 
-    return FloatingActionButton.extended(
-      onPressed: () async {
-        final currentUser = FirebaseAuth.instance.currentUser;
-        if (currentUser == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please log in first.')),
-          );
-          return;
-        }
+          return FloatingActionButton.extended(
+            onPressed: () async {
+              final currentUser = FirebaseAuth.instance.currentUser;
+              if (currentUser == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please log in first.')),
+                );
+                return;
+              }
 
-        if (isTutor) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => TutorDetails()),
+              if (isTutor) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => TutorDetails()),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const TutorRegistrationForm()),
+                );
+              }
+            },
+            label: Text(
+              isTutor ? "View Tutor Profile" : "Become a Tutor",
+              style: const TextStyle(
+                color: Color.fromARGB(255, 135, 61, 61),
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            icon: Icon(isTutor ? Icons.person : Icons.border_color_outlined),
           );
-        } else {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TutorRegistrationForm()),
-          );
-        }
-      },
-      label: Text(
-        isTutor ? "View Tutor Profile" : "Become a Tutor",
-        style: const TextStyle(
-          color: Color.fromARGB(255, 135, 61, 61),
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
-        ),
+        },
       ),
-      icon: Icon(isTutor ? Icons.person : Icons.border_color_outlined),
-    );
-  },
-),
-
-
     );
   }
 }

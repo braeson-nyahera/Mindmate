@@ -1,5 +1,5 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "interactive",
-    "cmake.sourceDirectory": "C:/Users/sammy/OneDrive/Desktop/Mindmate/linux"
+    "cmake.sourceDirectory": "/home/bryson/dev/Flutter/mindmate/linux"
 }
