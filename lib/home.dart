@@ -266,7 +266,7 @@ class _MyHomePageState extends State<MyHomePage> {
       Container(
         height: 80,
         width: double.infinity,
-        // color: Colors.blue.shade100, // Light theme background
+         color: const Color(0xFFBBDEFB),// Light theme background
         padding: const EdgeInsets.all(7),
         child: FutureBuilder<Map<String, dynamic>?>(
           future: _getLatestAppointment(), // Fetch upcoming appointment

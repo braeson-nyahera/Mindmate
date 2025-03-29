@@ -3,28 +3,29 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'bottom_bar.dart';
 import 'package:mindmate/message_detail.dart';
-
 import 'package:rxdart/rxdart.dart';
 
 class MessageListScreen extends StatefulWidget {
   MessageListScreen({super.key});
+
   final CollectionReference users =
       FirebaseFirestore.instance.collection('users');
 
   @override
   State<MessageListScreen> createState() => _MessageListScreenState();
 }
-Future<int> _countUnreadMessages(String otherUserId, String userId) async {
+
+Future<bool> _hasUnreadMessages(String otherUserId, String userId) async {
   QuerySnapshot unreadMessages = await FirebaseFirestore.instance
       .collection('messages')
-      .where('Receiver_Id', isEqualTo: userId) // Pass userId dynamically
+      .where('Receiver_Id', isEqualTo: userId)
       .where('Author_Id', isEqualTo: otherUserId)
-      .where('isRead', isEqualTo: false) // Only count unread messages
+      .where('isRead', isEqualTo: false)
+      .limit(1)
       .get();
 
-  return unreadMessages.docs.length;
+  return unreadMessages.docs.isNotEmpty;
 }
-
 
 class ConversationStream {
   static Stream<List<Map<String, dynamic>>> getConversations(String userId) {
@@ -74,7 +75,6 @@ class ConversationStream {
                       conversations[conversationKey]!['CreatedAt']
                           as Timestamp) >
                   0) {
-            // Add the otherUserId to the data map for easy reference
             data['otherUserId'] = otherUserId;
             data['documentId'] = doc.id;
 
@@ -102,7 +102,6 @@ class _MessageListScreenState extends State<MessageListScreen> {
   List<Map<String, dynamic>> users = [];
   String errorMessage = "";
 
-  // Cache for user data to avoid redundant fetches
   final Map<String, Future<DocumentSnapshot>> _userCache = {};
 
   Future<List<Map<String, dynamic>>> getUsernames(String userId) async {
@@ -139,186 +138,188 @@ class _MessageListScreenState extends State<MessageListScreen> {
     }
   }
 
- 
   TextEditingController searchController = TextEditingController();
   String searchQuery = "";
 
+  Widget _buildFloatingActionButton() {
+    return FloatingActionButton(
+      onPressed: () {
+        _showNewMessageDialog();
+      },
+      child: Icon(Icons.message),
+    );
+  }
 
+  void _showNewMessageDialog() {
+    print("New message dialog opened!");
+    showDialog(
+      context: context,
+      builder: (context) {
+        double screenHeight = MediaQuery.of(context).size.height;
 
- void _showNewMessageDialog() {
-  showDialog(
-    context: context,
-    builder: (context) {
-      double screenHeight = MediaQuery.of(context).size.height;
-
-      return StatefulBuilder(
-        builder: (context, setDialogState) {  
-          return Align(
-            alignment: Alignment.bottomCenter,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: double.infinity,
-                constraints: BoxConstraints(
-                  maxHeight: screenHeight * 0.9,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(11),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: double.infinity,
+                  constraints: BoxConstraints(
+                    maxHeight: screenHeight * 0.9,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10,
-                      spreadRadius: 2,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(11),
                     ),
-                  ],
-                ),
-                padding: EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Search Bar with Close Button
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.close, color: Colors.grey[700],size: 30,),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            controller: searchController,
-                            onChanged: (value) {
-                              setDialogState(() {
-                                searchQuery = value.toLowerCase(); // Update inside dialog
-                              });
-                            },
-                            decoration: InputDecoration(
-                              hintText: "Search Name...",
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(11),
-                                borderSide: BorderSide(
-                                  color: Color(0xFF2D5DA1),
-                                  width: 0.5,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  padding: EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.close, color: Colors.grey[700], size: 30),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: searchController,
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  searchQuery = value.toLowerCase();
+                                });
+                              },
+                              decoration: InputDecoration(
+                                hintText: "Search Name...",
+                                prefixIcon: Icon(Icons.search),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(11),
+                                  borderSide: BorderSide(
+                                    color: Color(0xFF2D5DA1),
+                                    width: 0.5,
+                                  ),
                                 ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding:
+                                    EdgeInsets.symmetric(vertical: 0),
                               ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: EdgeInsets.symmetric(vertical: 0),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-
-                    // Display the filtered users
-                    Expanded(
-                      child: _filteredUsers().isEmpty
-                          ? Center(
-                              child: Text(
-                                "No users available",
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: _filteredUsers().length,
-                              itemBuilder: (context, index) {
-                                final userslist = _filteredUsers()[index];
-                                return Card(
-                                  elevation: 3,
-                                  margin: EdgeInsets.symmetric(vertical: 6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(12),
-                                    onTap: () {
-                                      final user =
-                                          FirebaseAuth.instance.currentUser;
-                                      if (user != null &&
-                                          userslist['id'] != null) {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                MessageDetail(
-                                              authorId: user.uid,
-                                              receiverId: userslist['id'],
-                                            ),
-                                          ),
-                                        );
-                                      } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'Unable to load users. Please try again.'),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Row(
-                                        children: [
-                                          CircleAvatar(
-                                            backgroundColor: Colors.blue[100],
-                                            child: Icon(Icons.person,
-                                                color: Colors.blue[700]),
-                                          ),
-                                          SizedBox(width: 12),
-                                          Expanded(
-                                            child: Text(
-                                              userslist['name'] ??
-                                                  'Unknown User',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                overflow: TextOverflow.ellipsis,
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Expanded(
+                        child: _filteredUsers().isEmpty
+                            ? Center(
+                                child: Text(
+                                  "No users available",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: _filteredUsers().length,
+                                itemBuilder: (context, index) {
+                                  final userslist = _filteredUsers()[index];
+                                  return Card(
+                                    elevation: 3,
+                                    margin:
+                                        EdgeInsets.symmetric(vertical: 6),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: InkWell(
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                      onTap: () {
+                                        final user = FirebaseAuth
+                                            .instance.currentUser;
+                                        if (user != null &&
+                                            userslist['id'] != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  MessageDetail(
+                                                authorId: user.uid,
+                                                receiverId: userslist['id'],
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                  'Unable to load users. Please try again.'),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12.0),
+                                        child: Row(
+                                          children: [
+                                            CircleAvatar(
+                                              backgroundColor:
+                                                  Colors.blue[100],
+                                              child: Icon(Icons.person,
+                                                  color: Colors.blue[700]),
+                                            ),
+                                            SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                userslist['name'] ??
+                                                    'Unknown User',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                  ],
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      );
-    },
-  );
-}
-
-
-// Function to filter users based on the search query
-List<Map<String, dynamic>> _filteredUsers() {
-  if (searchQuery.isEmpty) {
-    return users;
+            );
+          },
+        );
+      },
+    );
   }
-  return users.where((user) {
-    String fullName = (user['name'] ?? '').toLowerCase();
-    List<String> nameParts = fullName.split(' '); 
 
-    
-    return nameParts.any((word) => word.startsWith(searchQuery));
-  }).toList();
-}
+  List<Map<String, dynamic>> _filteredUsers() {
+    if (searchQuery.isEmpty) {
+      return users;
+    }
+    return users.where((user) {
+      String fullName = (user['name'] ?? '').toLowerCase();
+      List<String> nameParts = fullName.split(' ');
 
-
-
-
+      return nameParts.any((word) => word.startsWith(searchQuery));
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -402,20 +403,20 @@ List<Map<String, dynamic>> _filteredUsers() {
       appBar: AppBar(
         toolbarHeight: 80,
         centerTitle: true,
-        // backgroundColor: const Color(0xFF2D5DA1),
         title: const Text(
           "Chats",
           style: TextStyle(
-            fontSize: 25, // Adjusts the font size
-            fontWeight: FontWeight.bold, // Makes the text bold
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
         ),
         leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-            }),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: Column(children: [
         Expanded(
@@ -439,10 +440,8 @@ List<Map<String, dynamic>> _filteredUsers() {
                 itemBuilder: (context, index) {
                   var data = conversations[index];
 
-                  // Get the ID of the other user in the conversation
                   String otherUserId = data['otherUserId'];
 
-                  // Determine if the current user is author or receiver of the latest message
                   bool isAuthor = user == data['Author_Id'];
 
                   String messageContent = data['message'] ?? "No content";
@@ -458,13 +457,14 @@ List<Map<String, dynamic>> _filteredUsers() {
                         userName = _extractUserName(userSnapshot.data);
                       }
 
-                      return FutureBuilder<int>(
-                      future: _countUnreadMessages(otherUserId, user),
+                      return FutureBuilder<bool>(
+                        future: _hasUnreadMessages(otherUserId, user),
                         builder: (context, unreadSnapshot) {
-                          int unreadCount = unreadSnapshot.data ?? 0;
+                          bool hasUnread = unreadSnapshot.data ?? false;
 
                           return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 8.0, vertical: 4.0),
                             child: ListTile(
                               onTap: () {
                                 Navigator.push(
@@ -472,43 +472,35 @@ List<Map<String, dynamic>> _filteredUsers() {
                                   MaterialPageRoute(
                                     builder: (context) => MessageDetail(
                                       authorId: isAuthor ? user : otherUserId,
-                                      receiverId: isAuthor ? otherUserId : user,
+                                      receiverId:
+                                          isAuthor ? otherUserId : user,
                                     ),
                                   ),
                                 );
                               },
-                              leading: Stack(
+                              leading: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  if (hasUnread)
+                                    Container(
+                                      margin: const EdgeInsets.only(right:6),
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.blue,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+
                                   CircleAvatar(
                                     backgroundColor: Colors.blue[100],
                                     child: Text(
-                                      userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                                      userName.isNotEmpty
+                                          ? userName[0].toUpperCase()
+                                          : '?',
                                       style: TextStyle(color: Colors.blue[800]),
                                     ),
                                   ),
-                                  if (unreadCount > 0)
-                                    Positioned(
-                                      left: -5, // Move badge to far left
-                                      top: 10,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        constraints:
-                                            const BoxConstraints(minWidth: 24, minHeight: 24),
-                                        child: Text(
-                                          unreadCount.toString(),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ),
                                 ],
                               ),
                               title: Row(
@@ -517,19 +509,22 @@ List<Map<String, dynamic>> _filteredUsers() {
                                     child: Text(
                                       userName,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
                                     ),
                                   ),
                                   Text(
                                     formattedTime,
-                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                    style: const TextStyle(
+                                        fontSize: 12, color: Colors.grey),
                                   ),
                                 ],
                               ),
                               subtitle: Row(
                                 children: [
                                   isAuthor
-                                      ? const Icon(Icons.arrow_outward, size: 14, color: Colors.blue)
+                                      ? const Icon(Icons.arrow_outward,
+                                          size: 14, color: Colors.blue)
                                       : const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
@@ -546,19 +541,13 @@ List<Map<String, dynamic>> _filteredUsers() {
                       );
                     },
                   );
-
                 },
               );
             },
           ),
         ),
       ]),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showNewMessageDialog();
-        },
-        child: Icon(Icons.message),
-      ),
+      floatingActionButton: _buildFloatingActionButton(),
     );
   }
 }

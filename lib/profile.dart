@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mindmate/bottom_bar.dart';
 import 'package:mindmate/tutor_registration.dart';
+import 'package:mindmate/tutor_details.dart';
 import 'package:mindmate/users/authservice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:intl/intl.dart';
 import 'package:mindmate/course_detail.dart';
 
 class ProfileWidget extends StatefulWidget {
@@ -131,21 +132,65 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
     try {
       final userId = FirebaseAuth.instance.currentUser!.uid;
+      final now = DateTime.now(); // Current date and time
 
       // Query all appointments for this user, ordered by date in descending order
-      final QuerySnapshot appointmentsSnapshot = await _firestore
+      final QuerySnapshot appointmentsSnapshot = await FirebaseFirestore
+          .instance
           .collection('appointments')
           .where('userId', isEqualTo: userId)
           .orderBy('date', descending: true)
           .get();
 
+      List<Map<String, dynamic>> filteredAppointments = [];
+
+      for (var doc in appointmentsSnapshot.docs) {
+        final appointmentData = doc.data() as Map<String, dynamic>;
+        final appointmentDate =
+            DateFormat('yyyy-MM-dd').parse(appointmentData['date']);
+        final appointmentTimeSlot = appointmentData['timeSlot'];
+
+        // Combine date and time to create a full DateTime for comparison
+        DateTime appointmentDateTime;
+
+        // Parse the time slot and create a full DateTime object
+        try {
+          final timeFormat = DateFormat('HH:mm'); // Adjust format as needed
+          final parsedTime = timeFormat.parse(appointmentTimeSlot);
+          appointmentDateTime = DateTime(
+            appointmentDate.year,
+            appointmentDate.month,
+            appointmentDate.day,
+            parsedTime.hour,
+            parsedTime.minute,
+          );
+        } catch (e) {
+          print('Error parsing time slot: $e');
+          // If time parsing fails, exclude the appointment (or handle differently)
+          continue;
+        }
+
+        // Check if the appointment is in the future
+        if (appointmentDateTime.isAfter(now)) {
+          filteredAppointments.add({
+            'id': doc.id,
+            ...appointmentData,
+            'appointmentDateTime': appointmentDateTime, // Add for sorting
+          });
+        }
+      }
+
+      // Sort the filtered appointments by appointmentDateTime in ascending order
+      filteredAppointments.sort((a, b) => (a['appointmentDateTime'] as DateTime)
+          .compareTo(b['appointmentDateTime'] as DateTime));
+
+      // Remove the appointmentDateTime field after sorting (if not needed)
+      for (var appointment in filteredAppointments) {
+        appointment.remove('appointmentDateTime');
+      }
+
       setState(() {
-        userAppointments = appointmentsSnapshot.docs
-            .map((doc) => {
-                  'id': doc.id,
-                  ...doc.data() as Map<String, dynamic>,
-                })
-            .toList();
+        userAppointments = filteredAppointments;
         isLoading = false;
       });
 
@@ -238,21 +283,57 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
   Future<void> _cancelAppointment(String appointmentId) async {
     try {
-      await _firestore.collection('appointments').doc(appointmentId).update({
-        'status': 'cancelled',
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) throw Exception("User not authenticated");
+
+      // Fetch appointment details
+      final appointmentDoc = await FirebaseFirestore.instance
+          .collection('appointments')
+          .doc(appointmentId)
+          .get();
+
+      if (!appointmentDoc.exists) throw Exception("Appointment not found");
+
+      final appointmentData = appointmentDoc.data() as Map<String, dynamic>;
+
+      // Get tutor info
+      final tutorDoc = await FirebaseFirestore.instance
+          .collection('tutors')
+          .doc(appointmentData['tutorId'])
+          .get();
+
+      String tutorName = "Unknown Tutor";
+      if (tutorDoc.exists) {
+        final tutorData = tutorDoc.data() as Map<String, dynamic>;
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(tutorData['userId'])
+            .get();
+        if (userDoc.exists) {
+          tutorName = userDoc.data()?['name'] ?? "Unknown Tutor";
+        }
+      }
+
+      // Update appointment status to "cancelled"
+      await FirebaseFirestore.instance
+          .collection('appointments')
+          .doc(appointmentId)
+          .update({'status': 'cancelled'});
+
+      // Create a cancellation notification
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': userId,
+        'message':
+            "Your appointment with $tutorName on ${appointmentData['date']} at ${appointmentData['timeSlot']} has been cancelled.",
+        'timestamp': Timestamp.now(),
       });
 
-      // Refresh appointments list
+      // Refresh the appointment list
       fetchUserAppointments();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Appointment cancelled successfully')),
-      );
+      print("Appointment successfully cancelled.");
     } catch (e) {
-      print('Error cancelling appointment: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to cancel appointment')),
-      );
+      print("Error cancelling appointment: $e");
     }
   }
 
@@ -260,8 +341,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        height: 300,
-        margin: EdgeInsets.all(10),
+        height: 277,
+        margin: EdgeInsets.all(1),
         decoration: BoxDecoration(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,7 +448,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFF2D5DA1),
+        backgroundColor: const Color.fromARGB(255, 45, 93, 161),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -387,9 +468,9 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   child: Column(
                     children: [
                       ClipRRect(
+                        borderRadius: BorderRadius.circular(0),
                         child: Container(
-                          height: 200,
-                          width: double.infinity,
+                          height: 150,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
@@ -399,14 +480,67 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                 const Color.fromARGB(255, 255, 255, 255),
                               ],
                             ),
+                            borderRadius: BorderRadius.circular(0),
+                            // border: Border(
+                            //   bottom: BorderSide(
+                            //     color:
+                            //         const Color.fromARGB(255, 39, 39, 39),
+                            //     width: 0.5,
+                            //   ),
+                            // ),
                           ),
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: Image.asset(
-                              'assets/images/perfectlogo.png',
-                              width: 250,
-                              height: 250,
-                              fit: BoxFit.contain,
+                          width: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage: _userData!["photoURL"] !=
+                                                null &&
+                                            _userData!["photoURL"].isNotEmpty
+                                        ? NetworkImage(_userData!["photoURL"])
+                                        : null,
+                                    child: _userData!["photoURL"] == null ||
+                                            _userData!["photoURL"].isEmpty
+                                        ? Icon(Icons.person, size: 40)
+                                        : null,
+                                  ),
+                                ),
+                                Center(
+                                  child: SizedBox(
+                                    width: 200,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "${_userData!['name']}",
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color.fromARGB(
+                                                255, 0, 0, 0),
+                                          ),
+                                        ),
+                                        Text(
+                                          "${_userData!['email']}",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 15,
+                                            color: const Color.fromARGB(
+                                                179, 0, 0, 0),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -420,83 +554,11 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16),
                               child: Container(
-                                height: 100,
+                                height: 250,
+                                margin: EdgeInsets.all(1),
                                 decoration: BoxDecoration(
-                                  color: Color.fromARGB(255, 255, 255, 255),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color:
-                                          const Color.fromARGB(255, 39, 39, 39),
-                                      width: 0.5,
+                                    // color: const Color.fromARGB(255, 251, 0, 0)
                                     ),
-                                  ),
-                                ),
-                                width: double.infinity,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: CircleAvatar(
-                                          radius: 40,
-                                          backgroundImage:
-                                              _userData!["photoURL"] != null &&
-                                                      _userData!["photoURL"]
-                                                          .isNotEmpty
-                                                  ? NetworkImage(
-                                                      _userData!["photoURL"])
-                                                  : null,
-                                          child: _userData!["photoURL"] ==
-                                                      null ||
-                                                  _userData!["photoURL"].isEmpty
-                                              ? Icon(Icons.person, size: 40)
-                                              : null,
-                                        ),
-                                      ),
-                                      Center(
-                                        child: SizedBox(
-                                          width: 200,
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "${_userData!['name']}",
-                                                style: TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: const Color.fromARGB(
-                                                      255, 0, 0, 0),
-                                                ),
-                                              ),
-                                              Text(
-                                                "${_userData!['email']}",
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 15,
-                                                  color: const Color.fromARGB(
-                                                      179, 0, 0, 0),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Container(
-                                height: 270,
-                                margin: EdgeInsets.all(10),
-                                decoration: BoxDecoration(),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -721,24 +783,75 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     ],
                   ),
                 ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TutorRegistrationForm(),
+      // floatingActionButton: FloatingActionButton.extended(
+      //   onPressed: () {
+      //     Navigator.push(
+      //       context,
+      //       MaterialPageRoute(
+      //         builder: (context) => TutorRegistrationForm(),
+      //       ),
+      //     );
+      //   },
+      //   label: const Text(
+      //     "Become a Tutor",
+      //     style: TextStyle(
+      //       color: Color.fromARGB(255, 135, 61, 61),
+      //       fontWeight: FontWeight.bold,
+      //       fontSize: 14,
+      //     ),
+      //   ),
+      //   icon: const Icon(Icons.border_color_outlined),
+      // ),
+      floatingActionButton: FutureBuilder(
+        future: FirebaseFirestore.instance
+            .collection('tutors')
+            .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+            .get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const FloatingActionButton.extended(
+              onPressed: null,
+              label: Text("Loading..."),
+              icon: Icon(Icons.hourglass_empty),
+            );
+          }
+
+          bool isTutor = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+
+          return FloatingActionButton.extended(
+            onPressed: () async {
+              final currentUser = FirebaseAuth.instance.currentUser;
+              if (currentUser == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please log in first.')),
+                );
+                return;
+              }
+
+              if (isTutor) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => TutorDetails()),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const TutorRegistrationForm()),
+                );
+              }
+            },
+            label: Text(
+              isTutor ? "View Tutor Profile" : "Become a Tutor",
+              style: const TextStyle(
+                color: Color.fromARGB(255, 135, 61, 61),
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
+            icon: Icon(isTutor ? Icons.person : Icons.border_color_outlined),
           );
         },
-        label: const Text(
-          "Become a Tutor",
-          style: TextStyle(
-            color: Color.fromARGB(255, 135, 61, 61),
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-        icon: const Icon(Icons.border_color_outlined),
       ),
     );
   }

@@ -13,6 +13,9 @@ import 'package:mindmate/users/login.dart';
 import 'package:mindmate/users/signup_screen.dart';
 import 'package:mindmate/message_list.dart';
 import 'home.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mindmate/tutor_details.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +28,25 @@ void main() async {
   await firestore.collection('test').add({'message': 'Hello from Mindmate!'});
   print("Firebase Initialized Successfully");
   runApp(const MyApp());
+}
+class AuthCheck extends StatelessWidget {
+  const AuthCheck({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (snapshot.hasData && snapshot.data != null) {
+          return MyHomePage(title: 'Mindmate'); // User is logged in
+        }
+        return LandingWidget(); // User is not logged in
+      },
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -41,8 +63,8 @@ class MyApp extends StatelessWidget {
             seedColor: const Color.fromARGB(255, 18, 156, 184)),
         useMaterial3: true,
       ),
-      home: MyHomePage(title: 'MindMate'),
-      initialRoute: '/landing_page',
+       home: AuthCheck(), //MyHomePage(title: 'MindMate'),
+      // initialRoute: '/landing_page',
       routes: {
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignUpScreen(),
@@ -55,6 +77,7 @@ class MyApp extends StatelessWidget {
         '/landing_page': (context) => LandingWidget(),
         '/chats': (context) => ChatsWidget(),
         '/message_details': (context) => MessageListScreen(),
+        '/tutor_details': (context) => TutorDetails(),
       },
     );
   }
