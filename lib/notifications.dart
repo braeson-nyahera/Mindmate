@@ -35,43 +35,52 @@ class _NotificationsWidgetState extends State<NotificationsWidget> {
         ),
       ),
       body: StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('notifications')
-            .where('userId', isEqualTo: userId)
-            .orderBy('timestamp', descending: true) // Show latest first
-            .snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Text("Error loading notifications"));
-            
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No notifications yet"));
-          }
+          stream: FirebaseFirestore.instance
+              .collection('notifications')
+              .where('userId', isEqualTo: userId) // This works for both students and tutors
+              .orderBy('timestamp', descending: true) // Show latest first
+              .snapshots(),
+          builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return const Center(child: Text("Error loading notifications"));
+            }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(child: Text("No notifications yet"));
+            }
 
-          var notifications = snapshot.data!.docs;
+            var notifications = snapshot.data!.docs;
 
-          return ListView.builder(
-            itemCount: notifications.length,
-            itemBuilder: (context, index) {
-              var notification = notifications[index];
-              return ListTile(
-                title: Text(notification['message']),
-                subtitle: Text(
-                  notification['timestamp'].toDate().toString(),
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                leading: const Icon(Icons.notifications),
-                tileColor: Colors.grey[200],
-              );
-            },
-          );
-        },
-      ),
-      bottomNavigationBar: Bottombar(currentIndex: 5),
+            return ListView.builder(
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                var notification = notifications[index];
+                return Container(
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.grey,
+                        width: 0.5,
+                      ),
+                    ),
+                  ),
+                  child: ListTile(
+                    title: Text(notification['message']),
+                    subtitle: Text(
+                      notification['timestamp'].toDate().toString(),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    leading: const Icon(Icons.notifications),
+                    tileColor: Colors.white,
+                  ),
+                );
+              },
+            );
+          },
+        ),
+       bottomNavigationBar: Bottombar(currentIndex: 5),
     );
   }
 }

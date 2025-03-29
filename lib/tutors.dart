@@ -171,33 +171,31 @@ void _viewTutorPopup(BuildContext context, Map<String, dynamic> tutorData, Strin
                         ),
                       ),
                       const SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: () {
-                          ElevatedButton.styleFrom(elevation: 0);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MessageDetail(authorId: FirebaseAuth.instance.currentUser!.uid, receiverId: tutorData['userId'])//selectedTutorId: tutorId,
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          //backgroundColor: const Color(0xFF2D5DA1),
-                          backgroundColor: const Color.fromARGB(0, 255, 255, 255),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        ),
-                        child:
-                        // 
-                         const Icon(
-                            Icons.message, // Use the message icon
-                            color: Color(0xFF2D5DA1),size: 28, // Set icon color to white
-                            //  color: Color.fromARGB(255, 255, 255, 255),size: 28, // Set icon color to white
-                          ),
-                      ),
+                      TextButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MessageDetail(
+          authorId: FirebaseAuth.instance.currentUser!.uid,
+          receiverId: tutorData['userId'],
+        ),
+      ),
+    );
+  },
+  style: TextButton.styleFrom(
+    backgroundColor: const Color.fromARGB(0, 255, 255, 255),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+  child: const Icon(
+    Icons.message,
+    color: Color(0xFF2D5DA1),
+    size: 28,
+  ),
+)
                     ],
                   ),
                 ],
@@ -223,6 +221,54 @@ void _viewTutorPopup(BuildContext context, Map<String, dynamic> tutorData, Strin
 
 
 class _TutorsWidgetState extends State<TutorsWidget> {
+  String searchQuery = ""; // searchQuery state variable
+  String selectedFilter = "All";
+  List<String> availableFilters = ["All"];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFilters();
+  }
+  
+
+ Future<void> _fetchFilters() async {
+  try {
+    var tutorsSnapshot = await FirebaseFirestore.instance.collection('tutors').get();
+
+    // Use a Set to store unique values
+    Set<String> allFiltersSet = {};
+
+    for (var doc in tutorsSnapshot.docs) {
+      var tutorData = doc.data() as Map<String, dynamic>;
+
+      // Extract subjects if available
+      if (tutorData.containsKey('subjects') && tutorData['subjects'] is List) {
+        allFiltersSet.addAll(List<String>.from(tutorData['subjects']));
+      }
+
+      // Extract specialty if available
+      if (tutorData.containsKey('specialty') && tutorData['specialty'] is String) {
+        allFiltersSet.add(tutorData['specialty']);
+      }
+    }
+
+    setState(() {
+      availableFilters.clear(); // Reset before adding
+      availableFilters.add("All"); // Default option
+
+      // Add unique combined filters (Subjects + Specialties)
+      availableFilters.addAll(allFiltersSet);
+    });
+
+    print("Available Filters: $availableFilters"); // Debugging
+
+  } catch (e) {
+    print("Error fetching filters: $e");
+  }
+}
+
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -230,7 +276,123 @@ class _TutorsWidgetState extends State<TutorsWidget> {
     int crossAxisCount = screenWidth < 600 ? 2 : (screenWidth < 900 ? 3 : 4);
 
     return Scaffold(
-      appBar: TopBar(title: 'Tutors'),
+      appBar: AppBar(
+        toolbarHeight: 80,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        // title: TextField(
+        //   onChanged: (value) {
+        //     setState(() {
+        //       searchQuery = value.toLowerCase(); // Update searchQuery on text change
+        //     });
+        //   },
+        //   decoration: const InputDecoration(
+        //     hintText: "Search by subject...",
+        //     prefixIcon: Icon(Icons.search),
+        //   ),
+        // ),
+        title: 
+
+// Assuming you have availableFilters and selectedFilter defined in your state
+
+ PopupMenuButton<String>(
+  onSelected: (String value) {
+    setState(() {
+      selectedFilter = value;
+    });
+  },
+  itemBuilder: (BuildContext context) {
+    return [
+      PopupMenuItem<String>(
+        enabled: false, // Prevents this wrapper item from being selectable
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxHeight: 290, // Dropdown grows dynamically but stops at . . .
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: availableFilters.map((String filter) {
+                return PopupMenuItem<String>(
+                  value: filter,
+                  child: SizedBox( 
+                    width: 300, //  Set dropdown width here
+                    child: Text(
+                      filter,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ),
+    ];
+  },
+  constraints: const BoxConstraints(
+    minWidth: 300, //  Controls the minimum width of the dropdown
+    maxWidth: 350, //  Limits maximum width
+  ),
+  offset: const Offset(0, 0), // Positions dropdown properly
+  position: PopupMenuPosition.under,
+  child: Container(
+    width: 400, //  Button width remains independent
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      border: Border.all(color: Colors.grey, width: 1.5),
+      borderRadius: BorderRadius.circular(12),
+      color: Colors.white,
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black12,
+          blurRadius: 5,
+          offset: Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          selectedFilter == "All" ? "Select a subject..." : selectedFilter,
+          // selectedFilter.isEmpty ? "Select a subject..." : selectedFilter,
+          style: const TextStyle(
+            fontSize: 18,
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const Icon(Icons.arrow_drop_down, color: Color(0xFF2D5DA1), size: 30),
+      ],
+    ),
+  ),
+),
+
+  
+
+
+        actions: [
+          // DropdownButton<String>(
+          //   value: selectedFilter,
+          //   onChanged: (newValue) {
+          //     setState(() {
+          //       selectedFilter = newValue!;
+          //     });
+          //   },
+          //   items: availableFilters.map((filter) {
+          //     return DropdownMenuItem(
+          //       value: filter,
+          //       child: Text(filter),
+          //     );
+          //   }).toList(),
+          // ),
+        ]
+      ),
       bottomNavigationBar: Bottombar(currentIndex: 3),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('tutors').snapshots(),
@@ -242,7 +404,21 @@ class _TutorsWidgetState extends State<TutorsWidget> {
             return const Center(child: Text("No tutors yet!"));
           }
 
-          var tutorsList = snapshot.data!.docs;
+          // var tutorsList = snapshot.data!.docs;
+
+          var tutorsList = snapshot.data!.docs.where((doc) {
+            var tutorData = doc.data() as Map<String, dynamic>;
+            bool matchesSearch = searchQuery.isEmpty ||
+                (tutorData['subjects'] as List)
+                    .any((subject) => subject.toLowerCase().contains(searchQuery)) ||
+                (tutorData['specialty']?.toLowerCase().contains(searchQuery) ?? false);
+
+            bool matchesFilter = selectedFilter == "All" ||
+                (tutorData['subjects'] as List).contains(selectedFilter) ||
+                tutorData['specialty'] == selectedFilter;
+
+            return matchesSearch && matchesFilter;
+          }).toList();
 
           return Padding(
             padding: const EdgeInsets.all(8.0),

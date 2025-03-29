@@ -138,79 +138,96 @@ class _TutorAppointmentFormState extends State<TutorAppointmentForm> {
     }
   }
 
+  
   Future<void> _submitAppointment() async {
-    // Validate form
-    if (_subjectController.text.isEmpty ||
-        _selectedTutor == null ||
-        _selectedDate == null ||
-        _selectedTimeSlot == null) {
-      _showErrorSnackBar('Please fill in all required fields');
-      return;
+  if (_subjectController.text.isEmpty ||
+      _selectedTutor == null ||
+      _selectedDate == null ||
+      _selectedTimeSlot == null) {
+    _showErrorSnackBar('Please fill in all required fields');
+    return;
+  }
+
+  setState(() {
+    _submitting = true;
+  });
+
+  try {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception('User not logged in');
     }
 
-    setState(() {
-      _submitting = true;
-    });
+    String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
 
-    try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        throw Exception('User not logged in');
-      }
+    // Fetch student's name
+    DocumentSnapshot studentDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
+    String studentName = studentDoc.exists ? studentDoc['name'] ?? 'Unknown Student' : 'Unknown Student';
 
-      // Format date to YYYY-MM-DD for Firestore
-      String formattedDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
-
-      // Create appointment document
-      await FirebaseFirestore.instance.collection('appointments').add({
-        'userId': currentUser.uid,
-        'tutorId': _selectedTutor,
-        'subject': _subjectController.text.trim(),
-        'date': formattedDate,
-        'timeSlot': _selectedTimeSlot,
-        'notes': _notesController.text,
-        'status': 'pending',
-        'createdAt': FieldValue.serverTimestamp()
-      });
-
-      // Fetch the tutor's name for the notification message
-    final tutorDoc = await FirebaseFirestore.instance.collection('tutors').doc(_selectedTutor).get();
+    // Fetch tutor details
+    DocumentSnapshot tutorDoc = await FirebaseFirestore.instance.collection('tutors').doc(_selectedTutor).get();
     String tutorName = 'Unknown Tutor'; // Default in case tutor is not found
+    String tutorUserId = '';
+
     if (tutorDoc.exists) {
       final tutorData = tutorDoc.data() as Map<String, dynamic>;
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(tutorData['userId']).get();
-      if(userDoc.exists){
-        tutorName = userDoc.data()!['name'] ?? 'Unknown Tutor';
-      }
+      tutorUserId = tutorData['userId']; // Ensure this field exists
+
+      // Fetch tutor's actual name from 'users' collection
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(tutorUserId).get();
+      if (userDoc.exists && userDoc.data() != null) {
+      final userData = userDoc.data() as Map<String, dynamic>; // Explicit cast
+      tutorName = userData['name'] ?? 'Unknown Tutor';
     }
 
-    // Create notification
+    }
+
+    // Create appointment document
+    await FirebaseFirestore.instance.collection('appointments').add({
+      'userId': currentUser.uid,
+      'tutorId': _selectedTutor,
+      'subject': _subjectController.text.trim(),
+      'date': formattedDate,
+      'timeSlot': _selectedTimeSlot,
+      'notes': _notesController.text,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp()
+    });
+
+    
     await FirebaseFirestore.instance.collection('notifications').add({
       'userId': currentUser.uid,
-      'message': 'Your appointment with $tutorName for ${_subjectController.text.trim()} on ${formattedDate} at $_selectedTimeSlot has been requested.',
+      'message': 'Your appointment with $tutorName for ${_subjectController.text.trim()} on $formattedDate at $_selectedTimeSlot has been requested.',
       'timestamp': Timestamp.now(),
-     
     });
-      
 
-      // Reset form and show success message
-      setState(() {
-        _subjectController.clear();
-        _selectedTutor = null;
-        _selectedDate = null;
-        _selectedTimeSlot = null;
-        _notesController.clear();
-        _submitting = false;
-      });
+    
+    await FirebaseFirestore.instance.collection('notifications').add({
+      'userId': tutorUserId,
+      'message': 'You have been booked for ${_subjectController.text.trim()} on $formattedDate at $_selectedTimeSlot by $studentName.',
+      'timestamp': Timestamp.now(),
+    });
 
-      _showSuccessSnackBar('Appointment requested successfully');
-    } catch (e) {
-      setState(() {
-        _submitting = false;
-      });
-      _showErrorSnackBar('Failed to submit appointment: $e');
-    }
+    // Reset form and show success message
+    setState(() {
+      _subjectController.clear();
+      _selectedTutor = null;
+      _selectedDate = null;
+      _selectedTimeSlot = null;
+      _notesController.clear();
+      _submitting = false;
+    });
+
+    _showSuccessSnackBar('Appointment requested successfully');
+  } catch (e) {
+    setState(() {
+      _submitting = false;
+    });
+    _showErrorSnackBar('Failed to submit appointment: $e');
   }
+}
+
+
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
