@@ -172,30 +172,30 @@ void _viewTutorPopup(BuildContext context, Map<String, dynamic> tutorData, Strin
                       ),
                       const SizedBox(width: 10),
                       TextButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MessageDetail(
-          authorId: FirebaseAuth.instance.currentUser!.uid,
-          receiverId: tutorData['userId'],
-        ),
-      ),
-    );
-  },
-  style: TextButton.styleFrom(
-    backgroundColor: const Color.fromARGB(0, 255, 255, 255),
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-  ),
-  child: const Icon(
-    Icons.message,
-    color: Color(0xFF2D5DA1),
-    size: 28,
-  ),
-)
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MessageDetail(
+                                authorId: FirebaseAuth.instance.currentUser!.uid,
+                                receiverId: tutorData['userId'],
+                              ),
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(0, 255, 255, 255),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.message,
+                          color: Color(0xFF2D5DA1),
+                          size: 28,
+                        ),
+                      )
                     ],
                   ),
                 ],
@@ -253,12 +253,12 @@ class _TutorsWidgetState extends State<TutorsWidget> {
       }
     }
 
-    setState(() {
-      availableFilters.clear(); // Reset before adding
-      availableFilters.add("All"); // Default option
+    List<String> sortedFilters = allFiltersSet.toList()..sort(); // Convert to list & sort alphabetically
 
-      // Add unique combined filters (Subjects + Specialties)
-      availableFilters.addAll(allFiltersSet);
+    setState(() {
+      availableFilters.clear();
+      availableFilters.add("All"); // Default option
+      availableFilters.addAll(sortedFilters);
     });
 
     print("Available Filters: $availableFilters"); // Debugging
@@ -267,6 +267,7 @@ class _TutorsWidgetState extends State<TutorsWidget> {
     print("Error fetching filters: $e");
   }
 }
+
 
 
   @override

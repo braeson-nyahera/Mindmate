@@ -110,7 +110,7 @@ class _MessageDetailState extends State<MessageDetail> {
         "message": message,
         "CreatedAt": FieldValue.serverTimestamp(),
         "Author_Id": FirebaseAuth.instance.currentUser!.uid,
-        "Receiver_Id": widget.receiverId,
+        "Receiver_Id": widget.authorId,
       });
 
       _messageController.clear();

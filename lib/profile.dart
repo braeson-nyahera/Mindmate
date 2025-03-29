@@ -208,7 +208,7 @@ Future<void> fetchUserAppointments() async {
     DateTime appointmentDate =
         appointment['appointmentDate']?.toDate() ?? DateTime.now();
     String formattedDate =
-        "${appointmentDate.day}/${appointmentDate.month}/${appointmentDate.year}";
+    "${appointmentDate.day}/${appointmentDate.month}/${appointmentDate.year}";
     // String formattedTime =
     //     "${appointmentDate.hour}:${appointmentDate.minute.toString().padLeft(2, '0')}";
     final Future<QuerySnapshot<Map<String, dynamic>>> tutor = FirebaseFirestore
@@ -495,6 +495,7 @@ Future<void> fetchUserAppointments() async {
                                   //   ),
                                   // ),
                                 ),
+                                // width: double.infinity,
                                 width: double.infinity,
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
@@ -567,7 +568,7 @@ Future<void> fetchUserAppointments() async {
                                 height: 250,
                                 margin: EdgeInsets.all(1),
                                 decoration: BoxDecoration(
-                                  // color: const Color.fromARGB(255, 251, 0, 0)
+                                  //  color: const Color.fromARGB(255, 251, 0, 0)
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,6 +584,7 @@ Future<void> fetchUserAppointments() async {
                                     ),
                                     SizedBox(
                                       height: 200,
+                                    
                                       child: enrolledCourses.isEmpty
                                           ? Center(
                                               child: Text(
@@ -659,7 +661,7 @@ Future<void> fetchUserAppointments() async {
                                                         );
                                                       },
                                                       child: Container(
-                                                        width: 150,
+                                                        width: 140,
                                                         height: 220,
                                                         margin: EdgeInsets
                                                             .symmetric(
@@ -667,22 +669,21 @@ Future<void> fetchUserAppointments() async {
                                                                 vertical: 10),
                                                         decoration:
                                                             BoxDecoration(
-                                                                color: Colors
-                                                                    .white,
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            8),
-                                                                border:
-                                                                    Border.all(
-                                                                  color: const Color
-                                                                      .fromARGB(
-                                                                      255,
-                                                                      39,
-                                                                      39,
-                                                                      39),
-                                                                  width: 1,
-                                                                )),
+                                                              boxShadow: [
+                                                                  BoxShadow(
+                                                                    color: Colors.black12,
+                                                                    blurRadius: 5,
+                                                                    spreadRadius: 2,
+                                                                  ),
+                                                                ],
+                                                                color: Colors.white,
+                                                                borderRadius: BorderRadius.circular(8),
+                                                                //  border:Border.all(
+                                                                //   color: const Color .fromARGB(  255, 39, 39,39),
+                                                                //   width: 1,
+
+                                                                // )
+                                                                ),
                                                         child: Column(
                                                           crossAxisAlignment:
                                                               CrossAxisAlignment
@@ -690,14 +691,10 @@ Future<void> fetchUserAppointments() async {
                                                           children: [
                                                             ClipRRect(
                                                               borderRadius:
-                                                                  BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
+                                                                  BorderRadius .only(
+                                                                    topLeft: Radius.circular(
                                                                         10),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        10),
+                                                                    topRight: Radius.circular(10),
                                                               ),
                                                               child: data['imageUrl'] !=
                                                                           null &&
