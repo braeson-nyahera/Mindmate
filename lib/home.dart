@@ -9,6 +9,7 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 
 
+
 import 'package:mindmate/bottom_bar.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -76,58 +77,90 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
- Future<Map<String, dynamic>?> _getLatestAppointment() async {
+
+
+Future<Map<String, dynamic>?> _getLatestAppointment() async {
   final currentUser = FirebaseAuth.instance.currentUser;
   if (currentUser == null) return null;
 
   try {
     final DateTime now = DateTime.now();
-    
+
     final QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection('appointments')
-        .where('userId', isEqualTo: currentUser.uid) 
-        .where('date', isGreaterThanOrEqualTo: DateFormat('yyyy-MM-dd').format(now)) 
+        .where('userId', isEqualTo: currentUser.uid)
         .orderBy('date', descending: false)
         .orderBy('timeSlot', descending: false)
-        .limit(1)
         .get();
 
     if (snapshot.docs.isEmpty) return null;
 
-    final appointmentData = snapshot.docs.first.data() as Map<String, dynamic>;
-    final tutorId = appointmentData['tutorId'];
+    for (final doc in snapshot.docs) {
+      final appointmentData = doc.data() as Map<String, dynamic>;
 
-    if (tutorId == null) return appointmentData; // No tutor assigned
+      // Extract date and time
+      final String dateStr = appointmentData['date']; // Assume format: "yyyy-MM-dd"
+      final String timeStr = appointmentData['timeSlot']; // Assume format: "HH:mm - HH:mm"
 
-    // Fetch tutor details from the tutors collection
-    final tutorSnapshot = await FirebaseFirestore.instance
-        .collection('tutors')
-        .doc(tutorId)
-        .get();
+      DateTime appointmentDateTime;
 
-    if (!tutorSnapshot.exists) return appointmentData; // Tutor not found
+      // Parse the time slot and create a full DateTime object
+      try {
+        final dateFormat = DateFormat('yyyy-MM-dd');
+        final timeFormat = DateFormat('HH:mm');
+        final appointmentDate = dateFormat.parse(dateStr);
+        final parsedTime = timeFormat.parse(timeStr.split(' - ')[0]); // Parse the start time
 
-    final tutorData = tutorSnapshot.data() as Map<String, dynamic>;
-    final userId = tutorData['userId'];
+        appointmentDateTime = DateTime(
+          appointmentDate.year,
+          appointmentDate.month,
+          appointmentDate.day,
+          parsedTime.hour,
+          parsedTime.minute,
+        );
+      } catch (e) {
+        print('Error parsing time slot: $e');
+        continue; // Skip this appointment if parsing fails
+      }
 
-    if (userId == null) return appointmentData; // No associated user
+      // Only return the next valid appointment
+      if (appointmentDateTime.isAfter(now)) {
+        final tutorId = appointmentData['tutorId'];
+        if (tutorId == null) return appointmentData;
 
-    // Fetch the user details from the users collection
-    final userSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .get();
+        // Fetch tutor details
+        final tutorSnapshot = await FirebaseFirestore.instance
+            .collection('tutors')
+            .doc(tutorId)
+            .get();
 
-    if (!userSnapshot.exists) return appointmentData; // User not found
+        if (!tutorSnapshot.exists) return appointmentData;
 
-    final userData = userSnapshot.data() as Map<String, dynamic>;
-    final tutorName = userData['name'] ?? "Unknown Tutor";
+        final tutorData = tutorSnapshot.data() as Map<String, dynamic>;
+        final userId = tutorData['userId'];
 
-    // Return the appointment data with the tutor's name
-    return {
-      ...appointmentData,
-      'tutorName': tutorName, // Add tutor's name to the returned data
-    };
+        if (userId == null) return appointmentData;
+
+        // Fetch the user details
+        final userSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .get();
+
+        if (!userSnapshot.exists) return appointmentData;
+
+        final userData = userSnapshot.data() as Map<String, dynamic>;
+        final tutorName = userData['name'] ?? "Unknown Tutor";
+
+        // Return valid appointment with tutor name
+        return {
+          ...appointmentData,
+          'tutorName': tutorName,
+        };
+      }
+    }
+
+    return null; // No upcoming appointments found
   } catch (e) {
     print("Error fetching appointment: $e");
     return null;
