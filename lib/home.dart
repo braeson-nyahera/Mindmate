@@ -82,25 +82,53 @@ class _MyHomePageState extends State<MyHomePage> {
 
       final QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('appointments')
-          .where('userId',
-              isEqualTo:
-                  currentUser.uid) // Only fetch current user's appointments
+          .where('userId', isEqualTo: currentUser.uid)
           .where('date',
-              isGreaterThanOrEqualTo:
-                  DateFormat('yyyy-MM-dd').format(now)) // Filter future dates
-          .orderBy('date', descending: false) // Sort by earliest date first
-          .orderBy('timeSlot', descending: false) // Sort by time if same date
-          .limit(1) // Get the closest upcoming appointment
+              isGreaterThanOrEqualTo: DateFormat('yyyy-MM-dd').format(now))
+          .orderBy('date', descending: false)
+          .orderBy('timeSlot', descending: false)
+          .limit(1)
           .get();
 
       if (snapshot.docs.isEmpty) return null;
 
+      final appointmentData =
+          snapshot.docs.first.data() as Map<String, dynamic>;
+      final tutorId = appointmentData['tutorId'];
+
+      if (tutorId == null) return appointmentData; // No tutor assigned
+
+      // Fetch tutor details from the tutors collection
+      final tutorSnapshot = await FirebaseFirestore.instance
+          .collection('tutors')
+          .doc(tutorId)
+          .get();
+
+      if (!tutorSnapshot.exists) return appointmentData; // Tutor not found
+
+      final tutorData = tutorSnapshot.data() as Map<String, dynamic>;
+      final userId = tutorData['userId'];
+
+      if (userId == null) return appointmentData; // No associated user
+
+      // Fetch the user details from the users collection
+      final userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      if (!userSnapshot.exists) return appointmentData; // User not found
+
+      final userData = userSnapshot.data() as Map<String, dynamic>;
+      final tutorName = userData['name'] ?? "Unknown Tutor";
+
+      // Return the appointment data with the tutor's name
       return {
-        'id': snapshot.docs.first.id,
-        ...snapshot.docs.first.data() as Map<String, dynamic>,
+        ...appointmentData,
+        'tutorName': tutorName, // Add tutor's name to the returned data
       };
     } catch (e) {
-      print("Error fetching closest appointment: $e");
+      print("Error fetching appointment: $e");
       return null;
     }
   }
@@ -247,7 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                       // Featured Section Placeholder
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -267,8 +295,29 @@ class _MyHomePageState extends State<MyHomePage> {
                             Container(
                               height: 80,
                               width: double.infinity,
-                              color: const Color(
-                                  0xFFBBDEFB), // Light theme background
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(255, 255, 255,
+                                    255), // Light theme background
+                                border: Border(
+                                  top: BorderSide(
+                                    color: Color.fromARGB(255, 53, 53, 53),
+                                    width: 0.2,
+                                  ),
+                                  bottom: BorderSide(
+                                    color: Color.fromARGB(255, 53, 53, 53),
+                                    width: 0.7,
+                                  ),
+                                  left: BorderSide.none,
+                                  right: BorderSide.none,
+                                ),
+                                // boxShadow: [
+                                //   BoxShadow(
+                                //     color: Colors.black12,
+                                //     blurRadius: 5,
+                                //     spreadRadius: 2,
+                                //   ),
+                                // ],
+                              ),
                               padding: const EdgeInsets.all(7),
                               child: FutureBuilder<Map<String, dynamic>?>(
                                 future:
@@ -308,12 +357,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                             ),
                                             const SizedBox(height: 8),
                                             Text(
-                                              latest['notes'] ??
-                                                  "No additional notes",
+                                              latest['tutorName'] ??
+                                                  "No tutor assigned",
                                               style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold),
                                               maxLines: 3,
                                               overflow: TextOverflow.ellipsis,
                                             ),

@@ -195,18 +195,15 @@ void _viewTutorPopup(
                             context,
                             MaterialPageRoute(
                               builder: (context) => MessageDetail(
-                                authorId:
-                                    FirebaseAuth.instance.currentUser!.uid,
+                                authorId: FirebaseAuth.instance.currentUser!.uid,
                                 receiverId: tutorData['userId'],
                               ),
                             ),
                           );
                         },
                         style: TextButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromARGB(0, 255, 255, 255),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                          backgroundColor: const Color.fromARGB(0, 255, 255, 255),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -267,26 +264,28 @@ class _TutorsWidgetState extends State<TutorsWidget> {
           allFiltersSet.addAll(List<String>.from(tutorData['subjects']));
         }
 
-        // Extract specialty if available
-        if (tutorData.containsKey('specialty') &&
-            tutorData['specialty'] is String) {
-          allFiltersSet.add(tutorData['specialty']);
-        }
+      // Extract specialty if available
+      if (tutorData.containsKey('specialty') && tutorData['specialty'] is String) {
+        allFiltersSet.add(tutorData['specialty']);
       }
-
-      setState(() {
-        availableFilters.clear(); // Reset before adding
-        availableFilters.add("All"); // Default option
-
-        // Add unique combined filters (Subjects + Specialties)
-        availableFilters.addAll(allFiltersSet);
-      });
-
-      print("Available Filters: $availableFilters"); // Debugging
-    } catch (e) {
-      print("Error fetching filters: $e");
     }
+
+    List<String> sortedFilters = allFiltersSet.toList()..sort(); // Convert to list & sort alphabetically
+
+    setState(() {
+      availableFilters.clear();
+      availableFilters.add("All"); // Default option
+      availableFilters.addAll(sortedFilters);
+    });
+
+    print("Available Filters: $availableFilters"); // Debugging
+
+  } catch (e) {
+    print("Error fetching filters: $e");
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
