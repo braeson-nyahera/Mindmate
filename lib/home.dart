@@ -8,7 +8,6 @@ import 'package:mindmate/users/authservice.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
 
-
 import 'package:mindmate/bottom_bar.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -35,8 +34,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _getUserData();
     fetchEnrolledCourses();
   }
-
-  
 
   Future<void> fetchEnrolledCourses() async {
     setState(() {
@@ -76,64 +73,65 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
- Future<Map<String, dynamic>?> _getLatestAppointment() async {
-  final currentUser = FirebaseAuth.instance.currentUser;
-  if (currentUser == null) return null;
+  Future<Map<String, dynamic>?> _getLatestAppointment() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return null;
 
-  try {
-    final DateTime now = DateTime.now();
-    
-    final QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('appointments')
-        .where('userId', isEqualTo: currentUser.uid) 
-        .where('date', isGreaterThanOrEqualTo: DateFormat('yyyy-MM-dd').format(now)) 
-        .orderBy('date', descending: false)
-        .orderBy('timeSlot', descending: false)
-        .limit(1)
-        .get();
+    try {
+      final DateTime now = DateTime.now();
 
-    if (snapshot.docs.isEmpty) return null;
+      final QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('appointments')
+          .where('userId', isEqualTo: currentUser.uid)
+          .where('date',
+              isGreaterThanOrEqualTo: DateFormat('yyyy-MM-dd').format(now))
+          .orderBy('date', descending: false)
+          .orderBy('timeSlot', descending: false)
+          .limit(1)
+          .get();
 
-    final appointmentData = snapshot.docs.first.data() as Map<String, dynamic>;
-    final tutorId = appointmentData['tutorId'];
+      if (snapshot.docs.isEmpty) return null;
 
-    if (tutorId == null) return appointmentData; // No tutor assigned
+      final appointmentData =
+          snapshot.docs.first.data() as Map<String, dynamic>;
+      final tutorId = appointmentData['tutorId'];
 
-    // Fetch tutor details from the tutors collection
-    final tutorSnapshot = await FirebaseFirestore.instance
-        .collection('tutors')
-        .doc(tutorId)
-        .get();
+      if (tutorId == null) return appointmentData; // No tutor assigned
 
-    if (!tutorSnapshot.exists) return appointmentData; // Tutor not found
+      // Fetch tutor details from the tutors collection
+      final tutorSnapshot = await FirebaseFirestore.instance
+          .collection('tutors')
+          .doc(tutorId)
+          .get();
 
-    final tutorData = tutorSnapshot.data() as Map<String, dynamic>;
-    final userId = tutorData['userId'];
+      if (!tutorSnapshot.exists) return appointmentData; // Tutor not found
 
-    if (userId == null) return appointmentData; // No associated user
+      final tutorData = tutorSnapshot.data() as Map<String, dynamic>;
+      final userId = tutorData['userId'];
 
-    // Fetch the user details from the users collection
-    final userSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .get();
+      if (userId == null) return appointmentData; // No associated user
 
-    if (!userSnapshot.exists) return appointmentData; // User not found
+      // Fetch the user details from the users collection
+      final userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
 
-    final userData = userSnapshot.data() as Map<String, dynamic>;
-    final tutorName = userData['name'] ?? "Unknown Tutor";
+      if (!userSnapshot.exists) return appointmentData; // User not found
 
-    // Return the appointment data with the tutor's name
-    return {
-      ...appointmentData,
-      'tutorName': tutorName, // Add tutor's name to the returned data
-    };
-  } catch (e) {
-    print("Error fetching appointment: $e");
-    return null;
+      final userData = userSnapshot.data() as Map<String, dynamic>;
+      final tutorName = userData['name'] ?? "Unknown Tutor";
+
+      // Return the appointment data with the tutor's name
+      return {
+        ...appointmentData,
+        'tutorName': tutorName, // Add tutor's name to the returned data
+      };
+    } catch (e) {
+      print("Error fetching appointment: $e");
+      return null;
+    }
   }
-}
-
 
   Future<void> _getUserData() async {
     _user = _auth.currentUser;
@@ -276,123 +274,133 @@ class _MyHomePageState extends State<MyHomePage> {
                       SizedBox(height: 10),
 
                       // Featured Section Placeholder
-            ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title outside the container but inside ClipRRect
-                    Padding(
-                      padding: const EdgeInsets.only(left: 7, bottom: 7),
-                      child: Text(
-                        "Coming Appointment",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-
-                    Container(
-                      height: 80,
-                      width: double.infinity,
-                      
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 255, 255, 255),// Light theme background
-                        border: Border(
-                        top: BorderSide(
-                          color: Color.fromARGB(255, 53, 53, 53),
-                          width: 0.2,
-                        ),
-                        bottom: BorderSide(
-                          color: Color.fromARGB(255, 53, 53, 53),
-                          width: 0.7,
-                        ),
-                        left: BorderSide.none,
-                        right: BorderSide.none,
-                      ),
-                      // boxShadow: [
-                      //   BoxShadow(
-                      //     color: Colors.black12,
-                      //     blurRadius: 5,
-                      //     spreadRadius: 2,
-                      //   ),
-                      // ],
-
-                      ),
-                      padding: const EdgeInsets.all(7),
-                      child: FutureBuilder<Map<String, dynamic>?>(
-                        future: _getLatestAppointment(), // Fetch upcoming appointment
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
-                          }
-
-                          if (!snapshot.hasData || snapshot.data == null) {
-                            return const Center(child: Text("No upcoming appointments"));
-                          }
-
-                          final latest = snapshot.data!;
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Left Column: Subject & Notes
-                              Expanded(
-                                flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      latest['subject'] ?? "No subject",
-                                      style: TextStyle(fontSize: 18,
-                                    fontWeight: FontWeight.bold,),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      latest['tutorName'] ?? "No tutor assigned",
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-
-                                  ],
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Title outside the container but inside ClipRRect
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 7, bottom: 7),
+                              child: Text(
+                                "Coming Appointment",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
+                            ),
 
-                              const SizedBox(width: 16), // Spacing between columns
-
-                              // Right Column: Date & Time
-                              Expanded(
-                                flex: 1,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      latest['date'] ?? "No date",
-                                      style: TextStyle(fontSize: 17),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      latest['timeSlot'] ?? "No time",
-                                      style: TextStyle(fontSize: 15),
-                                    ),
-                                  ],
+                            Container(
+                              height: 80,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(255, 255, 255,
+                                    255), // Light theme background
+                                border: Border(
+                                  top: BorderSide(
+                                    color: Color.fromARGB(255, 53, 53, 53),
+                                    width: 0.2,
+                                  ),
+                                  bottom: BorderSide(
+                                    color: Color.fromARGB(255, 53, 53, 53),
+                                    width: 0.7,
+                                  ),
+                                  left: BorderSide.none,
+                                  right: BorderSide.none,
                                 ),
+                                // boxShadow: [
+                                //   BoxShadow(
+                                //     color: Colors.black12,
+                                //     blurRadius: 5,
+                                //     spreadRadius: 2,
+                                //   ),
+                                // ],
                               ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                              padding: const EdgeInsets.all(7),
+                              child: FutureBuilder<Map<String, dynamic>?>(
+                                future:
+                                    _getLatestAppointment(), // Fetch upcoming appointment
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Center(
+                                        child: CircularProgressIndicator());
+                                  }
 
-                      
+                                  if (!snapshot.hasData ||
+                                      snapshot.data == null) {
+                                    return const Center(
+                                        child:
+                                            Text("No upcoming appointments"));
+                                  }
+
+                                  final latest = snapshot.data!;
+                                  return Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Left Column: Subject & Notes
+                                      Expanded(
+                                        flex: 2,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              latest['subject'] ?? "No subject",
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              latest['tutorName'] ??
+                                                  "No tutor assigned",
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold),
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                          width: 16), // Spacing between columns
+
+                                      // Right Column: Date & Time
+                                      Expanded(
+                                        flex: 1,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              latest['date'] ?? "No date",
+                                              style: TextStyle(fontSize: 17),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              latest['timeSlot'] ?? "No time",
+                                              style: TextStyle(fontSize: 15),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
                       // SizedBox(height: 10),
-
-
 
                       ClipRRect(
                         clipBehavior: Clip.none,
@@ -642,7 +650,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 child: StreamBuilder<QuerySnapshot>(
                                   stream: _firestore
                                       .collection('courses')
-                                      .limit(10)
+                                      .limit(3)
                                       .snapshots(),
                                   builder: (context, snapshot) {
                                     if (snapshot.connectionState ==
