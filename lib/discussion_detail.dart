@@ -123,7 +123,9 @@ class _DiscussionDetailState extends State<DiscussionDetail> {
     final DateTime now = DateTime.now();
     final Duration difference = now.difference(dateTime);
 
-    if (difference.inDays > 0) {
+    if (difference.inDays > 7) {
+      return '${dateTime.day.toString().padLeft(2, '0')}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.year.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } else if (difference.inDays > 0) {
       return '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
     } else if (difference.inHours > 0) {
       return '${difference.inHours} hour${difference.inHours > 1 ? 's' : ''} ago';
@@ -172,48 +174,53 @@ class _DiscussionDetailState extends State<DiscussionDetail> {
               : Column(
                   children: [
                     // Discussion question card
-                 SizedBox(
-                    width: double.infinity, // Makes it take the full width
-                    child: Container(
-                      margin: EdgeInsets.symmetric(vertical: 16),
-                      child: Card(
-                        color: Colors.transparent, 
-                        elevation: 0,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              
-                              
-                              child: Text(
-                                discussionData?['question'] ?? 'Error accessing the discussion question',
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    SizedBox(
+                      width: double.infinity, // Makes it take the full width
+                      child: Container(
+                        margin: EdgeInsets.symmetric(vertical: 16),
+                        child: Card(
+                          color: Colors.transparent,
+                          elevation: 0,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  discussionData?['question'] ??
+                                      'Error accessing the discussion question',
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-
-
 
                     // Comments section
-                   Expanded(
+                    Expanded(
                       child: StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection('comments')
-                            .where('discussion_id', isEqualTo: widget.discussionId)
+                            .where('discussion_id',
+                                isEqualTo: widget.discussionId)
                             .orderBy('createdAt', descending: true)
                             .snapshots(),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting && comments.isEmpty) {
-                            return const Center(child: CircularProgressIndicator());
+                          if (snapshot.connectionState ==
+                                  ConnectionState.waiting &&
+                              comments.isEmpty) {
+                            return const Center(
+                                child: CircularProgressIndicator());
                           }
 
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                            return const Center(child: Text("No comments yet!"));
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
+                            return const Center(
+                                child: Text("No comments yet!"));
                           }
 
                           var docs = snapshot.data!.docs;
@@ -221,7 +228,8 @@ class _DiscussionDetailState extends State<DiscussionDetail> {
                           return ListView.builder(
                             itemCount: docs.length,
                             itemBuilder: (context, index) {
-                              var data = docs[index].data() as Map<String, dynamic>;
+                              var data =
+                                  docs[index].data() as Map<String, dynamic>;
 
                               return FutureBuilder<DocumentSnapshot>(
                                 future: FirebaseFirestore.instance
@@ -232,35 +240,49 @@ class _DiscussionDetailState extends State<DiscussionDetail> {
                                   String userName = "Loading...";
                                   String timeString = "";
 
-                                  if (userSnapshot.connectionState == ConnectionState.done) {
-                                    userName = _extractUserName(userSnapshot.data);
+                                  if (userSnapshot.connectionState ==
+                                      ConnectionState.done) {
+                                    userName =
+                                        _extractUserName(userSnapshot.data);
                                   }
 
-                                  Timestamp? timestamp = data['createdAt'] as Timestamp?;
+                                  Timestamp? timestamp =
+                                      data['createdAt'] as Timestamp?;
                                   timeString = _formatTimestamp(timestamp);
 
                                   return Card(
-                                    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                    margin: const EdgeInsets.symmetric(
+                                        vertical: 4, horizontal: 8),
                                     child: ListTile(
                                       title: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
                                             userName,
-                                            style: const TextStyle(fontSize: 14, color: Color.fromARGB(255, 79, 79, 79)),
+                                            style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Color.fromARGB(
+                                                    255, 79, 79, 79)),
                                           ),
                                           Text(
                                             timeString,
-                                            style: const TextStyle(fontSize: 12, color: Color.fromARGB(255, 79, 79, 79)),
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Color.fromARGB(
+                                                    255, 79, 79, 79)),
                                           ),
                                         ],
                                       ),
                                       subtitle: Padding(
-                                        padding: const EdgeInsets.only(top: 4), 
+                                        padding: const EdgeInsets.only(top: 4),
                                         child: Text(
-                                          data['comment'] ?? 'No comment' ,
-                                          textAlign: TextAlign.left, style: TextStyle(fontSize: 15,color: const Color.fromARGB(255, 0, 0, 0)),
-                                          
+                                          data['comment'] ?? 'No comment',
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(
+                                              fontSize: 15,
+                                              color: const Color.fromARGB(
+                                                  255, 0, 0, 0)),
                                         ),
                                       ),
                                     ),

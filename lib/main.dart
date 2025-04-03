@@ -16,7 +16,6 @@ import 'home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mindmate/tutor_details.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -29,6 +28,7 @@ void main() async {
   print("Firebase Initialized Successfully");
   runApp(const MyApp());
 }
+
 class AuthCheck extends StatelessWidget {
   const AuthCheck({super.key});
 
@@ -57,13 +57,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Mindmate',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
             seedColor: const Color.fromARGB(255, 18, 156, 184)),
         useMaterial3: true,
       ),
-       home: AuthCheck(), //MyHomePage(title: 'MindMate'),
+      home: AuthCheck(), //MyHomePage(title: 'MindMate'),
       // initialRoute: '/landing_page',
       routes: {
         '/login': (context) => LoginScreen(),
