@@ -454,201 +454,208 @@ class _CourseCreationWidgetState extends State<CourseCreationWidget> {
   }
 
   Widget _buildCourseForm() {
-    return Form(
-      key: _formKey,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            const Text(
-              'Create New Course',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-
-            // Author field (non-editable)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade400),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Author',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  isAuthorLoading
-                      ? const CircularProgressIndicator()
-                      : Text(
-                          author,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Course Image Picker
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade400),
-              ),
-              child: _hasImage
-                  ? Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: kIsWeb && _webImage != null
-                              ? Image.memory(
-                                  _webImage!,
-                                  fit: BoxFit.cover,
-                                )
-                              : Image.file(
-                                  _imageFile!,
-                                  fit: BoxFit.cover,
-                                ),
-                        ),
-                        if (isUploading)
-                          Container(
-                            color: Colors.black38,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                  value: _uploadProgress,
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  '${(_uploadProgress * 100).toStringAsFixed(1)}%',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.white),
-                              onPressed: _showImagePickerOptions,
-                            ),
-                          ),
-                        ),
-                        if (_imageSize != null && !isUploading)
-                          Positioned(
-                            bottom: 8,
-                            left: 8,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Size: $_imageSize',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 12),
-                              ),
-                            ),
-                          ),
-                      ],
-                    )
-                  : Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.add_photo_alternate,
-                            size: 50,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Add Course Image',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: _showImagePickerOptions,
-                            icon: const Icon(Icons.photo_camera),
-                            label: const Text('Choose Image'),
-                          ),
-                        ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Create New Course'),
+        
+      ),
+      body: Form(
+        key: _formKey,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              // const Text(
+              //   'Create New Course',
+              //   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                
+              // ),
+              // const SizedBox(height: 20),
+      
+              // Author field (non-editable)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade400),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Author',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
                       ),
                     ),
-            ),
-
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Course Title',
-                border: OutlineInputBorder(),
+                    const SizedBox(height: 8),
+                    isAuthorLoading
+                        ? const CircularProgressIndicator()
+                        : Text(
+                            author,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ],
+                ),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter course title';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Course Description',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
+      
+              const SizedBox(height: 16),
+      
+              // Course Image Picker
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade400),
+                ),
+                child: _hasImage
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: kIsWeb && _webImage != null
+                                ? Image.memory(
+                                    _webImage!,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.file(
+                                    _imageFile!,
+                                    fit: BoxFit.cover,
+                                  ),
+                          ),
+                          if (isUploading)
+                            Container(
+                              color: Colors.black38,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                    value: _uploadProgress,
+                                  ),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    '${(_uploadProgress * 100).toStringAsFixed(1)}%',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.white),
+                                onPressed: _showImagePickerOptions,
+                              ),
+                            ),
+                          ),
+                          if (_imageSize != null && !isUploading)
+                            Positioned(
+                              bottom: 8,
+                              left: 8,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'Size: $_imageSize',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 12),
+                                ),
+                              ),
+                            ),
+                        ],
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.add_photo_alternate,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Add Course Image',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: _showImagePickerOptions,
+                              icon: const Icon(Icons.photo_camera),
+                              label: const Text('Choose Image'),
+                            ),
+                          ],
+                        ),
+                      ),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter course description';
-                }
-                return null;
-              },
-              maxLines: 5,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed:
-                  (isAuthorLoading || isUploading) ? null : _createCourse,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+      
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Course Title',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter course title';
+                  }
+                  return null;
+                },
               ),
-              child: isAuthorLoading
-                  ? const Text('Loading Author Data...')
-                  : isUploading
-                      ? const Text('Uploading Image...')
-                      : const Text('Create Course'),
-            ),
-          ],
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Course Description',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter course description';
+                  }
+                  return null;
+                },
+                maxLines: 5,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed:
+                    (isAuthorLoading || isUploading) ? null : _createCourse,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: isAuthorLoading
+                    ? const Text('Loading Author Data...')
+                    : isUploading
+                        ? const Text('Uploading Image...')
+                        : const Text('Create Course'),
+              ),
+            ],
+          ),
         ),
       ),
     );
