@@ -1,16 +1,18 @@
 # mindmate
 
-A new Flutter project.
+Mindmate is a peer to peer tutoring app developed with flutter framework. This app tries to bridge the gap of content delivery by enabling other students to teach their peers.
+
+## Requirements
+To efficiently run this project you need:
+<ul>
+<li> Android Studio that is correctly set up</li>
+<li> Android SDK (prefferably version 34^)</li>
+<li> Flutter Framework installed (Comes together with the dart SDK)</li>
+</ul>
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This project can be run by first cloning the app.<br>
+In the root folder you can run --flutter run-- to initialize the app
+<br>
+Incase of dependency issues run --flutter pub get-- before initializing the application.
