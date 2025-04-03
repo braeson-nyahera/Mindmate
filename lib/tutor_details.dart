@@ -238,16 +238,34 @@ class _TutorDetailsState extends State<TutorDetails> {
                       ],
                     ),
                   ),
-                  IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CourseCreationWidget(),
-                          ),
-                        );
-                      },
-                      icon: Icon(Icons.add)),
+                              TextButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CourseCreationWidget(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add, size: 24, color: Colors.white),
+                label: const Text(
+                  "Create Course",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFF2D5DA1), // Background color
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8), // Rounded corners
+                  ),
+                  elevation: 4, // Adds a slight shadow
+                ),
+              ),
+
 
                   // Booked Appointments Title
                   const Text(
@@ -313,6 +331,7 @@ class _TutorDetailsState extends State<TutorDetails> {
                                         fontSize: 18),
                                   ),
                                   subtitle: Text(
+                                    "📚 Subject: ${appointment['subject'] ?? 'N/A'}\n"
                                     "📅 Date: ${appointment['date'] ?? 'N/A'}\n"
                                     "⏰ Time: ${appointment['timeSlot'] ?? 'N/A'}\n"
                                     "📌 Status: ${appointment['status'] ?? 'Pending'}",
