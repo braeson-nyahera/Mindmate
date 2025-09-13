@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mindmate/courses.dart';
-import 'package:mindmate/forum.dart';
-import 'package:mindmate/home.dart';
-import 'package:mindmate/message_list.dart';
-import 'package:mindmate/notes.dart';
-import 'package:mindmate/tutors.dart';
+import 'package:mindmate/screens/courses/courses.dart';
+import 'package:mindmate/screens/forum/forum.dart';
+import 'package:mindmate/screens/main/home.dart';
+import 'package:mindmate/screens/messaging/message_list.dart';
+import 'package:mindmate/screens/main/notes.dart';
+import 'package:mindmate/screens/tutors/tutors.dart';
 
 class DrawerWidget extends StatelessWidget {
   const DrawerWidget({

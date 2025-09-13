@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 
-import 'package:mindmate/profile.dart';
+import 'package:mindmate/screens/main/profile.dart';
 
 class TutorRegistrationForm extends StatefulWidget {
   const TutorRegistrationForm({super.key});

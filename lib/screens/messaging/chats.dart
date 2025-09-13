@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'bottom_bar.dart';
+import 'package:mindmate/widgets/bottom_bar.dart';
 
 
 class ChatsWidget extends StatefulWidget {

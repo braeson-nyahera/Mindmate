@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'package:mindmate/discussion_detail.dart';
+import 'package:mindmate/screens/forum/discussion_detail.dart';
 
-import 'package:mindmate/bottom_bar.dart';
+import 'package:mindmate/widgets/bottom_bar.dart';
 
 class ForumsWidget extends StatefulWidget {
   ForumsWidget({super.key});

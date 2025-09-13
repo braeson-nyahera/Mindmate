@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:async';
-import 'package:mindmate/no_network.dart';
 
 class ConnectivityWrapper extends StatefulWidget {
   final Widget child;

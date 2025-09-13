@@ -1,9 +1,9 @@
 // ignore_for_file: use_build_context_synchronously, avoid_print
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mindmate/users/authservice.dart';
+import 'package:flutter/material.dart';
+import 'package:mindmate/services/authservice.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -30,20 +30,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String name = nameController.text.trim();
     String password2 = password2Controller.text.trim();
 
-    if (email.isNotEmpty &&
-        name.isNotEmpty &&
-        password1.isNotEmpty &&
-        password2.isNotEmpty &&
-        password1 == password2) {
-      User? user = await authService.signUp(email, password1);
+    if (email.isEmpty ||
+        name.isEmpty ||
+        password1.isEmpty ||
+        password2.isEmpty) {
+      showError("All fields are required");
+      return;
+    }
 
-      if (user != null) {
-        await _saveUserToFirestore(user);
-        print("User Signed Up: ${user.email}");
+    if (password1 != password2) {
+      showError("Passwords don't match");
+      return;
+    }
+
+    if (password1.length < 6) {
+      showError("Password must be at least 6 characters");
+      return;
+    }
+
+    try {
+      final result = await authService.signUp(email, password1);
+      if (result.isSuccess && result.user != null) {
+        await _saveUserToFirestore(result.user!);
+        showSuccess(result.message);
         Navigator.pushReplacementNamed(context, '/home');
       } else {
-        print("Sign Up Failed");
+        showError(result.message);
       }
+    } catch (e) {
+      showError("An unexpected error occurred. Please try again.");
     }
   }
 
@@ -72,18 +87,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _isLoading = true;
     });
 
-    User? user = await authService.signInWithGoogle();
+    try {
+      final result = await authService.signInWithGoogle();
+      setState(() {
+        _isLoading = false;
+      });
 
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (user != null) {
-      print("Google Sign-Up Successful: ${user.email}");
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      print("Google Sign-Up Failed");
+      if (result.isSuccess && result.user != null) {
+        await _saveUserToFirestore(result.user!);
+        showSuccess(result.message);
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        showError(result.message);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      showError("Google sign-up failed. Please try again.");
     }
+  }
+
+  void showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 4),
+      ),
+    );
+  }
+
+  void showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
 
   @override

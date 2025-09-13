@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mindmate/appointment.dart';
-import 'package:mindmate/top_bar.dart';
-import 'bottom_bar.dart';
+import 'package:mindmate/screens/tutors/appointment.dart';
+import 'package:mindmate/widgets/bottom_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mindmate/message_detail.dart';
+import 'package:mindmate/screens/messaging/message_detail.dart';
 
 class TutorsWidget extends StatefulWidget {
   const TutorsWidget({super.key});

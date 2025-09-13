@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mindmate/users/authservice.dart';
+import 'package:mindmate/services/authservice.dart';
 
 class TopBar extends StatelessWidget implements PreferredSizeWidget {
  final String title;

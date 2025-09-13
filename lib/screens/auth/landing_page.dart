@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:mindmate/no_network.dart';
+import 'package:mindmate/utils/no_network.dart';
 
 class LandingWidget extends StatefulWidget {
   const LandingWidget({super.key});

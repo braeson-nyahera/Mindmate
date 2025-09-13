@@ -6,7 +6,6 @@ import 'dart:math';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:path/path.dart' as path;
 import 'dart:typed_data';
 
 // Models stay the same
@@ -53,10 +52,10 @@ class CourseCreationWidget extends StatefulWidget {
   final Function(Module)? onModuleAdded;
 
   const CourseCreationWidget({
-    Key? key,
+    super.key,
     this.onCourseCreated,
     this.onModuleAdded,
-  }) : super(key: key);
+  });
 
   @override
   State<CourseCreationWidget> createState() => _CourseCreationWidgetState();
@@ -225,7 +224,7 @@ class _CourseCreationWidgetState extends State<CourseCreationWidget> {
             _webImage = imageBytes;
             _imageFile = null;
             // Add filesize info for feedback
-            _imageSize = (imageBytes.length / 1024).toStringAsFixed(2) + ' KB';
+            _imageSize = '${(imageBytes.length / 1024).toStringAsFixed(2)} KB';
           });
         } else {
           // Handle mobile image
@@ -234,8 +233,7 @@ class _CourseCreationWidgetState extends State<CourseCreationWidget> {
             _webImage = null;
             // Add filesize info for feedback
             _imageSize =
-                (File(pickedFile.path).lengthSync() / 1024).toStringAsFixed(2) +
-                    ' KB';
+                '${(File(pickedFile.path).lengthSync() / 1024).toStringAsFixed(2)} KB';
           });
         }
       }
@@ -805,10 +803,9 @@ class _AddModuleForm extends StatefulWidget {
   final Function(Module) onModuleAdded;
 
   const _AddModuleForm({
-    Key? key,
     required this.courseId,
     required this.onModuleAdded,
-  }) : super(key: key);
+  });
 
   @override
   State<_AddModuleForm> createState() => _AddModuleFormState();
@@ -900,7 +897,7 @@ class _AddModuleFormState extends State<_AddModuleForm> {
 
 // Example usage remains the same
 class ExampleUsage extends StatelessWidget {
-  const ExampleUsage({Key? key}) : super(key: key);
+  const ExampleUsage({super.key});
 
   @override
   Widget build(BuildContext context) {

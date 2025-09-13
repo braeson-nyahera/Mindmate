@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:mindmate/bottom_bar.dart';
-import 'package:mindmate/tutor_registration.dart';
-import 'package:mindmate/tutor_details.dart';
-import 'package:mindmate/users/authservice.dart';
+import 'package:mindmate/widgets/bottom_bar.dart';
+import 'package:mindmate/screens/tutors/tutor_registration.dart';
+import 'package:mindmate/screens/tutors/tutor_details.dart';
+import 'package:mindmate/services/authservice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:mindmate/course_detail.dart';
+import 'package:mindmate/screens/courses/course_detail.dart';
 
 class ProfileWidget extends StatefulWidget {
   const ProfileWidget({super.key});
@@ -93,7 +93,15 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     });
 
     try {
-      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print("User not authenticated");
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+      final userId = user.uid;
 
       // Get a direct reference to the enrolls collection
       final enrollsRef = FirebaseFirestore.instance.collection('enrolls');
@@ -131,7 +139,15 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     });
 
     try {
-      final userId = FirebaseAuth.instance.currentUser!.uid;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print("User not authenticated");
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+      final userId = user.uid;
       final now = DateTime.now(); // Current date and time
 
       // Query all appointments for this user, ordered by date in descending order
@@ -207,7 +223,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     DateTime appointmentDate =
         appointment['appointmentDate']?.toDate() ?? DateTime.now();
     String formattedDate =
-    "${appointmentDate.day}/${appointmentDate.month}/${appointmentDate.year}";
+        "${appointmentDate.day}/${appointmentDate.month}/${appointmentDate.year}";
     // String formattedTime =
     //     "${appointmentDate.hour}:${appointmentDate.minute.toString().padLeft(2, '0')}";
     final Future<QuerySnapshot<Map<String, dynamic>>> tutor = FirebaseFirestore
@@ -468,87 +484,84 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                   child: Column(
                     children: [
                       ClipRRect(
-                              borderRadius: BorderRadius.circular(0),
-                              child: Container(
-                                height: 150,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Color(0xFF2D5DA1),
-                                  const Color.fromARGB(255, 255, 255, 255),
-                                ],
-                              ),
-                                  borderRadius: BorderRadius.circular(0),
-                                  // border: Border(
-                                  //   bottom: BorderSide(
-                                  //     color:
-                                  //         const Color.fromARGB(255, 39, 39, 39),
-                                  //     width: 0.5,
-                                  //   ),
-                                  // ),
-                                ),
-                                // width: double.infinity,
-                                width: double.infinity,
-                                child: Padding(
+                        borderRadius: BorderRadius.circular(0),
+                        child: Container(
+                          height: 150,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Color(0xFF2D5DA1),
+                                const Color.fromARGB(255, 255, 255, 255),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(0),
+                            // border: Border(
+                            //   bottom: BorderSide(
+                            //     color:
+                            //         const Color.fromARGB(255, 39, 39, 39),
+                            //     width: 0.5,
+                            //   ),
+                            // ),
+                          ),
+                          // width: double.infinity,
+                          width: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              children: [
+                                Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: CircleAvatar(
-                                          radius: 40,
-                                          backgroundImage:
-                                              _userData!["photoURL"] != null &&
-                                                      _userData!["photoURL"]
-                                                          .isNotEmpty
-                                                  ? NetworkImage(
-                                                      _userData!["photoURL"])
-                                                  : null,
-                                          child: _userData!["photoURL"] ==
-                                                      null ||
-                                                  _userData!["photoURL"].isEmpty
-                                              ? Icon(Icons.person, size: 40)
-                                              : null,
-                                        ),
-                                      ),
-                                      Center(
-                                        child: SizedBox(
-                                          width: 200,
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "${_userData!['name']}",
-                                                style: TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: const Color.fromARGB(
-                                                      255, 0, 0, 0),
-                                                ),
-                                              ),
-                                              Text(
-                                                "${_userData!['email']}",
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 15,
-                                                  color: const Color.fromARGB(
-                                                      179, 0, 0, 0),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                  child: CircleAvatar(
+                                    radius: 40,
+                                    backgroundImage: _userData!["photoURL"] !=
+                                                null &&
+                                            _userData!["photoURL"].isNotEmpty
+                                        ? NetworkImage(_userData!["photoURL"])
+                                        : null,
+                                    child: _userData!["photoURL"] == null ||
+                                            _userData!["photoURL"].isEmpty
+                                        ? Icon(Icons.person, size: 40)
+                                        : null,
                                   ),
                                 ),
-                              ),
+                                Center(
+                                  child: SizedBox(
+                                    width: 200,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "${_userData!['name']}",
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color.fromARGB(
+                                                255, 0, 0, 0),
+                                          ),
+                                        ),
+                                        Text(
+                                          "${_userData!['email']}",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 15,
+                                            color: const Color.fromARGB(
+                                                179, 0, 0, 0),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
+                          ),
+                        ),
+                      ),
                       Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: ListView(
@@ -561,8 +574,8 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                 height: 250,
                                 margin: EdgeInsets.all(1),
                                 decoration: BoxDecoration(
-                                  //  color: const Color.fromARGB(255, 251, 0, 0)
-                                ),
+                                    //  color: const Color.fromARGB(255, 251, 0, 0)
+                                    ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -577,7 +590,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                     ),
                                     SizedBox(
                                       height: 200,
-                                    
                                       child: enrolledCourses.isEmpty
                                           ? Center(
                                               child: Text(
@@ -662,21 +674,24 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                                                 vertical: 10),
                                                         decoration:
                                                             BoxDecoration(
-                                                              boxShadow: [
-                                                                  BoxShadow(
-                                                                    color: Colors.black12,
-                                                                    blurRadius: 5,
-                                                                    spreadRadius: 2,
-                                                                  ),
-                                                                ],
-                                                                color: Colors.white,
-                                                                borderRadius: BorderRadius.circular(8),
-                                                                //  border:Border.all(
-                                                                //   color: const Color .fromARGB(  255, 39, 39,39),
-                                                                //   width: 1,
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: Colors
+                                                                  .black12,
+                                                              blurRadius: 5,
+                                                              spreadRadius: 2,
+                                                            ),
+                                                          ],
+                                                          color: Colors.white,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(8),
+                                                          //  border:Border.all(
+                                                          //   color: const Color .fromARGB(  255, 39, 39,39),
+                                                          //   width: 1,
 
-                                                                // )
-                                                                ),
+                                                          // )
+                                                        ),
                                                         child: Column(
                                                           crossAxisAlignment:
                                                               CrossAxisAlignment
@@ -684,10 +699,14 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                                                           children: [
                                                             ClipRRect(
                                                               borderRadius:
-                                                                  BorderRadius .only(
-                                                                    topLeft: Radius.circular(
+                                                                  BorderRadius
+                                                                      .only(
+                                                                topLeft: Radius
+                                                                    .circular(
                                                                         10),
-                                                                    topRight: Radius.circular(10),
+                                                                topRight: Radius
+                                                                    .circular(
+                                                                        10),
                                                               ),
                                                               child: data['imageUrl'] !=
                                                                           null &&

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'bottom_bar.dart';
 
 class NoNetwork extends StatefulWidget {
   const NoNetwork({super.key});

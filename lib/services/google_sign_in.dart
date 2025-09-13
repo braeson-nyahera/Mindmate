@@ -1,6 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mindmate/users/authservice.dart';
+import 'package:mindmate/services/authservice.dart';
 
 class SignInScreen extends StatelessWidget {
   final AuthService authService = AuthService();
@@ -8,12 +7,16 @@ class SignInScreen extends StatelessWidget {
   SignInScreen({super.key});
 
   void handleGoogleSignIn(BuildContext context) async {
-    User? user = await authService.signInWithGoogle();
-    if (user != null) {
-      print("Google Sign-In Successful: ${user.email}");
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      print("Google Sign-In Failed");
+    try {
+      final result = await authService.signInWithGoogle();
+      if (result.isSuccess && result.user != null) {
+        print("Google Sign-In Successful: ${result.user!.email}");
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        print("Google Sign-In Failed: ${result.message}");
+      }
+    } catch (e) {
+      print("Google Sign-In Error: $e");
     }
   }
 

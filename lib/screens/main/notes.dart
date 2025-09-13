@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'package:mindmate/top_bar.dart';
+import 'package:mindmate/widgets/top_bar.dart';
 
 class NotesWidget extends StatefulWidget {
   NotesWidget({super.key});

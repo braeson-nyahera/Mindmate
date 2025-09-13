@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mindmate/module_detail.dart';
-import 'package:mindmate/bottom_bar.dart';
+import 'package:mindmate/screens/courses/module_detail.dart';
+import 'package:mindmate/widgets/bottom_bar.dart';
 
 class CourseDetail extends StatefulWidget {
   const CourseDetail({super.key, required this.courseId, required this.userId});

@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mindmate/course_detail.dart';
-import 'package:mindmate/bottom_bar.dart';
+import 'package:mindmate/screens/courses/course_detail.dart';
+import 'package:mindmate/widgets/bottom_bar.dart';
 
 class CoursesList extends StatefulWidget {
   CoursesList({super.key});
@@ -28,67 +28,67 @@ class _CoursesListState extends State<CoursesList> {
     super.initState();
     fetchEnrolledCourses();
   }
-  
 
   //
-Future<void> enrollInCourse(String courseId) async {
-  try {
-    // Fetch course details to get the title
-    DocumentSnapshot<Map<String, dynamic>> courseDoc =
-        await FirebaseFirestore.instance.collection('courses').doc(courseId).get();
-    
-    if (!courseDoc.exists) {
-      throw Exception("Course not found");
+  Future<void> enrollInCourse(String courseId) async {
+    try {
+      // Fetch course details to get the title
+      DocumentSnapshot<Map<String, dynamic>> courseDoc = await FirebaseFirestore
+          .instance
+          .collection('courses')
+          .doc(courseId)
+          .get();
+
+      if (!courseDoc.exists) {
+        throw Exception("Course not found");
+      }
+
+      String courseTitle = courseDoc.data()?['title'] ?? "Unknown Course";
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception("User not authenticated");
+      }
+      String userId = user.uid;
+
+      // Enroll user
+      await FirebaseFirestore.instance.collection('enrolls').add({
+        'course': courseId,
+        'user': userId,
+        'time_enrolled': Timestamp.now(),
+      });
+
+      // Add a notification
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': userId,
+        'message': 'You have successfully enrolled in "$courseTitle"!',
+        'timestamp': Timestamp.now(),
+        'courseId': courseId,
+      });
+
+      // Update UI state
+      setState(() {
+        enrolledCourses.add(courseId);
+      });
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Successfully enrolled in "$courseTitle"!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      print("Error enrolling in course: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to enroll in course. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-
-    String courseTitle = courseDoc.data()?['title'] ?? "Unknown Course";
-    String userId = FirebaseAuth.instance.currentUser!.uid;
-
-    // Enroll user
-    await FirebaseFirestore.instance.collection('enrolls').add({
-      'course': courseId,
-      'user': userId,
-      'time_enrolled': Timestamp.now(),
-    });
-
-    // Add a notification
-    await FirebaseFirestore.instance.collection('notifications').add({
-      'userId': userId,
-      'message': 'You have successfully enrolled in "$courseTitle"!',
-      'timestamp': Timestamp.now(),
-      'courseId': courseId,
-    });
-
-    // Update UI state
-    setState(() {
-      enrolledCourses.add(courseId);
-    });
-
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Successfully enrolled in "$courseTitle"!'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  } catch (e) {
-    print("Error enrolling in course: $e");
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to enroll in course. Please try again.'),
-        backgroundColor: Colors.red,
-      ),
-    );
   }
-}
-
-
 
 //
-
-
-
-
 
   // Fetch all courses the current user has enrolled in
   Future<void> fetchEnrolledCourses() async {
@@ -97,9 +97,15 @@ Future<void> enrollInCourse(String courseId) async {
     });
 
     try {
-      
-      final userId = FirebaseAuth.instance.currentUser!.uid;
-      
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print("User not authenticated");
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+      final userId = user.uid;
 
       // Get a direct reference to the enrolls collection
       final enrollsRef = FirebaseFirestore.instance.collection('enrolls');
@@ -191,23 +197,26 @@ Future<void> enrollInCourse(String courseId) async {
                     ),
                     itemCount: courseLists.length,
                     itemBuilder: (context, index) {
-                      var data =
-                          courseLists[index].data() as Map<String, dynamic>;
                       var courseDoc = courseLists[index];
+                      var data = courseDoc.data() as Map<String, dynamic>?;
+                      if (data == null) {
+                        return SizedBox(); // Skip null documents
+                      }
                       var courseId = courseDoc.id;
                       bool isEnrolled = enrolledCourses.contains(courseId);
 
                       return GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => CourseDetail(
-                                  courseId: courseId,
-                                  userId:
-                                      FirebaseAuth.instance.currentUser!.uid),
-                            ),
-                          );
+                          final user = FirebaseAuth.instance.currentUser;
+                          if (user != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CourseDetail(
+                                    courseId: courseId, userId: user.uid),
+                              ),
+                            );
+                          }
                         },
                         child: Container(
                           decoration: BoxDecoration(
@@ -258,7 +267,7 @@ Future<void> enrollInCourse(String courseId) async {
                               Text(
                                 "By ${data['Author'] ?? 'Unknown'}",
                                 style: TextStyle(
-                                color: const Color.fromARGB(179, 0, 0, 0)),
+                                    color: const Color.fromARGB(179, 0, 0, 0)),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.left,
@@ -284,11 +293,14 @@ Future<void> enrollInCourse(String courseId) async {
                                       ),
                                     )
                                   : GestureDetector(
-                                      onTap: () => enrollInCourse(courseId),  // Use the extracted function
+                                      onTap: () => enrollInCourse(
+                                          courseId), // Use the extracted function
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          color: Color.fromARGB(255, 48, 208, 64),
-                                          borderRadius: BorderRadius.circular(6),
+                                          color:
+                                              Color.fromARGB(255, 48, 208, 64),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
                                         ),
                                         width: 60,
                                         height: 30,
@@ -303,7 +315,6 @@ Future<void> enrollInCourse(String courseId) async {
                                         ),
                                       ),
                                     ),
-
                             ],
                           ),
                         ),
