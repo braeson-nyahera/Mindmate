@@ -1,0 +1,2 @@
+/home/bryson/dev/Flutter/mindmate/android/app/.cxx/RelWithDebInfo/6x144i1c/arm64-v8a/CMakeFiles/edit_cache.dir
+/home/bryson/dev/Flutter/mindmate/android/app/.cxx/RelWithDebInfo/6x144i1c/arm64-v8a/CMakeFiles/rebuild_cache.dir

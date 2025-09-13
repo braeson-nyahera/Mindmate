@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/home/bryson/snap/flutter/common/flutter/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/home/bryson/Android/Sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/home/bryson/dev/Flutter/mindmate/android/app/.cxx/RelWithDebInfo/6x144i1c/armeabi-v7a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/home/bryson/Android/Sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/home/bryson/dev/Flutter/mindmate/android/app/.cxx/RelWithDebInfo/6x144i1c/armeabi-v7a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}
