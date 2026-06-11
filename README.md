@@ -1,38 +1,38 @@
-# MindMate 🧠
+# MindMate 
 
 **MindMate** is a comprehensive educational platform built with Flutter that connects students with tutors, provides course management, and facilitates collaborative learning through forums and messaging. The app serves as a one-stop solution for academic support and learning management.
 
-## ✨ Features
+##  Features
 
-### 🔐 Authentication & User Management
+###  Authentication & User Management
 - **Google Sign-In Integration** - Seamless authentication with Google accounts
 - **Firebase Authentication** - Secure user authentication and session management
 - **User Profiles** - Personalized profiles with enrollment and appointment tracking
 
-### 📚 Course Management
+###  Course Management
 - **Course Enrollment** - Browse and enroll in available courses
 - **Course Details** - Detailed course information with modules and materials
 - **Progress Tracking** - Track enrolled courses and learning progress
 - **Search Functionality** - Find courses easily with built-in search
 
-### 👨‍🏫 Tutor System
+###  Tutor System
 - **Tutor Directory** - Browse available tutors with detailed profiles
 - **Tutor Registration** - Register as a tutor to offer services
 - **Appointment Booking** - Schedule tutoring sessions with available tutors
 - **Appointment Management** - View and manage upcoming appointments
 
-### 💬 Communication & Collaboration
+###  Communication & Collaboration
 - **Discussion Forums** - Participate in academic discussions and Q&A
 - **Real-time Messaging** - Chat functionality for student-tutor communication
 - **Notifications** - Stay updated with important announcements and messages
 
-### 🌐 Additional Features
+###  Additional Features
 - **Network Connectivity Monitoring** - Automatic detection and handling of network issues
 - **Responsive Design** - Optimized for different screen sizes and orientations
 - **Material Design 3** - Modern UI following Google's Material Design guidelines
 - **Dark/Light Theme Support** - Customizable app appearance
 
-## 🚀 Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **Flutter** - Cross-platform mobile application framework
@@ -54,12 +54,6 @@
 - **Connectivity Plus** - Network connectivity monitoring
 - **Intl** - Internationalization and date formatting
 - **RxDart** - Reactive programming utilities
-
-## 📱 Screenshots
-
-| Landing Page | Course List | Tutor Directory | Discussion Forum |
-|:------------:|:-----------:|:---------------:|:----------------:|
-| Authentication and onboarding | Browse available courses | Find and book tutors | Community discussions |
 
 ## 🛠️ Installation & Setup
 
@@ -113,7 +107,7 @@ flutter build apk --release  # Android
 flutter build ios --release  # iOS
 ```
 
-## 🏗️ Project Structure
+##  Project Structure
 
 The codebase has been refactored and organized into a clean, modular architecture that follows Flutter best practices:
 
@@ -162,25 +156,7 @@ lib/
     └── top_bar.dart                  # Top navigation bar
 ```
 
-### 🎯 Architecture Benefits
-
-**📁 Modular Organization:**
-- **Feature-based structure** - Related functionality grouped together
-- **Clear separation of concerns** - UI, business logic, and utilities separated
-- **Scalable architecture** - Easy to add new features and maintain existing ones
-
-**🔧 Maintainability:**
-- **Intuitive file organization** - Developers can quickly locate specific functionality
-- **Consistent naming conventions** - Clear, descriptive file and folder names
-- **Reduced coupling** - Components are loosely coupled and highly cohesive
-
-**🚀 Development Experience:**
-- **Faster navigation** - IDE can efficiently index and search organized code
-- **Team collaboration** - Multiple developers can work on different features without conflicts
-- **Code reusability** - Shared components and services can be easily imported
-
-
-## 🎯 Usage
+##  Usage
 
 ### For Students
 1. **Sign up/Login** with Google account
@@ -201,7 +177,7 @@ lib/
 The app uses Firebase for backend services. Ensure your `firebase_options.dart` contains the correct configuration for your Firebase project.
 
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -209,22 +185,20 @@ The app uses Firebase for backend services. Ensure your `firebase_options.dart` 
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 
 For support and questions:
-- **Email**: braebulimo@gmail.com
 - **GitHub Issues**: [Create an issue](https://github.com/braeson-nyahera/Mindmate/issues)
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
-- **Flutter Team** for the amazing framework
-- **Firebase Team** for the backend services
-- **Material Design** for the beautiful UI components
-- **Open Source Community** for the various packages used
+- **The Great Team**
+- [@RAMBIM003](https://github.com/RAMBIM003)
+- [Sammy Focus](https://github.com/Sirme247)
 
 ---
 
