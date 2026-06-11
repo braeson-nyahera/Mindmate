@@ -55,7 +55,7 @@
 - **Intl** - Internationalization and date formatting
 - **RxDart** - Reactive programming utilities
 
-## 🛠️ Installation & Setup
+##  Installation & Setup
 
 ### Prerequisites
 - **Flutter SDK** (^3.6.2)
@@ -171,7 +171,7 @@ lib/
 3. **Participate in Forums** to help students with questions
 4. **Update Profile** with qualifications and subject areas
 
-## 🔧 Configuration
+##  Configuration
 
 ### Environment Variables
 The app uses Firebase for backend services. Ensure your `firebase_options.dart` contains the correct configuration for your Firebase project.
@@ -189,16 +189,17 @@ The app uses Firebase for backend services. Ensure your `firebase_options.dart` 
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📞 Support
+##  Support
 
 For support and questions:
 - **GitHub Issues**: [Create an issue](https://github.com/braeson-nyahera/Mindmate/issues)
 
 ##  Acknowledgments
 
-- **The Great Team**
-- [@RAMBIM003](https://github.com/RAMBIM003)
-- [Sammy Focus](https://github.com/Sirme247)
+- **The Amazing Team**
+    - [@Braeson Nyahera](https://github.com/braeson-nyahera)
+    - [@RAMBIM003](https://github.com/RAMBIM003)
+    - [@Sammy Focus](https://github.com/Sirme247)
 
 ---
 
